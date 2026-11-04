@@ -1,0 +1,49 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  height: 100px;
+  padding: 0 60px;
+  background-color: var(--color-white);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brand,
+.actions {
+  display: flex;
+  align-items: center;
+  flex: 1 0 0;
+}
+
+.actions .loginButton {
+  flex-shrink: 0;
+  width: 296px;
+  height: 50px;
+}
+
+.actions {
+  justify-content: flex-end;
+}
+
+.logoLink {
+  display: inline-flex;
+}
+
+.logo {
+  display: block;
+  width: 214px;
+  height: auto;
+}
+
+.link {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
