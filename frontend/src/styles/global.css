@@ -1,0 +1,66 @@
+:root {
+  --color-text-secondary: #748299;
+  --color-white: #ffffff;
+  --color-text-primary: #17253b;
+  --color-primary: #14b88a;
+  --color-background: #eff5fe;
+  --color-green-active: #e9faf4;
+  --color-card-green: #d9efe7;
+  --color-card-blue: #dde9f7;
+  --color-card-beige: #f5e6d9;
+  --color-border: #e7ebf1;
+
+  --font-family: "Inter", sans-serif;
+
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1024px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 3px;
+}
+
+#root {
+  min-height: 100vh;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
