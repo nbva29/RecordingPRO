@@ -64,6 +64,17 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
+При первой настройке скопируйте `backend/.env.example` в `backend/.env`
+и укажите данные подключения к своей базе MySQL. Файл `.env` исключён из Git.
+Из папки `backend` примените миграции:
+
+```bash
+python -m alembic upgrade head
+```
+
+Начальная миграция создаёт таблицы `users`, `roles` и добавляет роли
+`client` (клиент) и `admin` (администратор).
+
 Запустите сервер:
 
 ```bash
@@ -74,7 +85,7 @@ python -m uvicorn app.main:app --reload
 
 Документация Swagger: http://localhost:8000/docs
 
-**Примечание:** подключение MySQL, переменные окружения и Docker будут настроены на следующих этапах разработки.
+**Примечание:** Docker будет настроен на следующих этапах разработки.
 
 ## Команда
 
