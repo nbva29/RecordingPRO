@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
 
@@ -20,6 +21,16 @@ class RoleRead(BaseModel):
 
     id: int
     name: str
+
+
+class UserLogin(UserCreate):
+    password: SecretStr = Field(min_length=1, max_length=128)
+
+
+class TokenRead(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+    expires_in: int
 
 
 class UserRead(BaseModel):

@@ -66,6 +66,10 @@ python -m pip install -r requirements.txt
 
 При первой настройке скопируйте `backend/.env.example` в `backend/.env`
 и укажите данные подключения к своей базе MySQL. Файл `.env` исключён из Git.
+Для `JWT_SECRET_KEY` сгенерируйте собственный секрет командой
+`python -c "import secrets; print(secrets.token_urlsafe(32))"`
+и запишите результат в `.env`. По умолчанию токен действует 30 минут
+(`ACCESS_TOKEN_EXPIRE_MINUTES=30`).
 Из папки `backend` примените миграции:
 
 ```bash
@@ -97,6 +101,17 @@ python -m uvicorn app.main:app --reload
 Успешный ответ: `201 Created`, повторный email: `409 Conflict`,
 некорректные данные: `422 Unprocessable Entity`.
 Регистрация создаёт клиента; пароль и его хеш в ответ не включаются.
+
+Вход: `POST /api/auth/login` с JSON-полями `email` и `password`.
+Успешный ответ `200 OK` содержит `access_token`, `token_type: "bearer"`
+и `expires_in` (срок действия в секундах). Неверный email или пароль
+возвращает `401 Unauthorized`.
+
+Текущий пользователь: `GET /api/auth/me` с заголовком
+`Authorization: Bearer <access_token>`. Отсутствующий, недействительный
+или просроченный токен возвращает `401 Unauthorized`.
+Для проверки в Swagger выполните вход, скопируйте `access_token`, нажмите
+**Authorize** и вставьте только токен. Затем выполните `GET /api/auth/me`.
 
 **Примечание:** Docker будет настроен на следующих этапах разработки.
 

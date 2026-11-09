@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     db_name: str
     db_user: str
     db_password: SecretStr
+
+    jwt_secret_key: SecretStr = Field(min_length=32)
+    access_token_expire_minutes: int = Field(default=30, gt=0)
 
 
 settings = Settings()
