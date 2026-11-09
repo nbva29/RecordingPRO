@@ -85,6 +85,19 @@ python -m uvicorn app.main:app --reload
 
 Документация Swagger: http://localhost:8000/docs
 
+Регистрация клиента: `POST /api/auth/register`. Пример JSON-запроса:
+
+```json
+{
+  "email": "client@example.com",
+  "password": "ExamplePassword123!"
+}
+```
+
+Успешный ответ: `201 Created`, повторный email: `409 Conflict`,
+некорректные данные: `422 Unprocessable Entity`.
+Регистрация создаёт клиента; пароль и его хеш в ответ не включаются.
+
 **Примечание:** Docker будет настроен на следующих этапах разработки.
 
 ## Команда
