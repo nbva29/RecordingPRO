@@ -1,0 +1,133 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 15px 20px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.top {
+  display: flex;
+  gap: 19px;
+}
+
+.image {
+  flex: 0 0 154px;
+  height: 112px;
+  border-radius: 10px;
+}
+
+.information {
+  flex: 1;
+  min-width: 0;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.heading h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.category {
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.description,
+.address {
+  margin: 10px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.bottom {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 16px;
+}
+
+.services {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-card);
+  border-radius: 10px;
+}
+
+.service {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.service:first-child {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.service span,
+.service strong {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.service strong {
+  white-space: nowrap;
+}
+
+.booking {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bookingLabel {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.bookingTime {
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bookingButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  background: var(--color-primary);
+  border-radius: 8px;
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bookingButton:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 90%,
+    var(--color-text-primary)
+  );
+}
