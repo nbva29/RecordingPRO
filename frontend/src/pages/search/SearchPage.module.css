@@ -1,0 +1,108 @@
+.searchPage {
+  background-color: var(--color-background);
+}
+
+.searchForm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1100px;
+  margin: 40px auto 0;
+  gap: 27px;
+}
+
+.searchFields {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.searchFields:focus-within {
+  border-color: var(--color-primary);
+}
+
+.searchInput,
+.cityInput {
+  height: 60px;
+  padding: 0 18px;
+  background-color: var(--color-white);
+  border: 0;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.cityField {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 200px;
+  padding: 0 12px;
+}
+
+.cityInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.searchButton {
+  height: 60px;
+  font-size: 16px;
+}
+
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.category {
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background-color: var(--color-white);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.category:hover {
+  border-color: var(--color-primary);
+}
+
+.active {
+  background-color: var(--color-card-green);
+  border-color: var(--color-card-green);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+  margin-top: 30px;
+}
+
+.empty {
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}
