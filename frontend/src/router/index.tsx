@@ -5,7 +5,7 @@ import { PublicLayout } from "../layouts/PublicLayout";
 import { BookingPage } from "../pages/BookingPage";
 import { HomePage } from "../pages/home/HomePage";
 import { LoginPage } from "../pages/LoginPage";
-import { OrganizationPage } from "../pages/OrganizationPage";
+import { OrganizationPage } from "../pages/organization/OrganizationPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { SearchPage } from "../pages/search/SearchPage";
 import { AdminCalendarPage } from "../pages/admin/AdminCalendarPage";

@@ -61,7 +61,7 @@ export function HomePage() {
     },
   ];
   return (
-    <main className={styles.home}>
+    <main>
       <Heading
         title="Записывайтесь к лучшим специалистам"
         description="Находите услуги рядом с вами и бронируйте удобное время онлайн"

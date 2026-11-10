@@ -1,0 +1,81 @@
+.organizationInfo {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 50px;
+}
+
+.organizationBanner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 170px;
+  padding: 55px;
+  background-color: var(--color-card-green);
+  border-radius: 14px;
+}
+
+.category {
+  text-transform: uppercase;
+  color: var(--color-uppercase);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.organizationBanner h1 {
+  color: var(--color-text-primary);
+}
+
+.organizationBanner p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}
+
+.organizationAddress {
+  display: flex;
+  flex-direction: column;
+  min-height: 170px;
+  padding: 24px;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.organizationAddress h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.organizationAddress p {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.bookingButton {
+  width: 100%;
+  margin-top: auto;
+  height: 44px;
+  font-size: 14px;
+}
+
+.servicesSection {
+  margin-top: 28px;
+}
+
+.servicesSection h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.servicesList {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

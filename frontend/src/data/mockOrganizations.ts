@@ -1,56 +1,56 @@
-import type { SearchOrganization } from "../components/search/SearchOrganizationCard/SearchOrganizationCard";
+import type { Organization } from "../types/organization";
 
-export const mockOrganizations: SearchOrganization[] = [
+export const mockOrganizations: Organization[] = [
   {
     id: 1,
     name: "Студия красоты «Лайм»",
+    shortName: "Лайм",
     category: "Маникюр",
-    description: "Уютная студия красоты",
-    address: "Томск, ул. Тверская, 12",
-    background: "#F5E6D9",
+    description: "Маникюр · Ресницы · Брови",
+    address: "Томск, пр. Ленина, 32",
+    city: "Томск",
+    workingHours: "Ежедневно · 09:00–21:00",
+    background: "#D9EFE7",
     services: [
-      { name: "Маникюр с покрытием", price: 2000 },
-      { name: "Снятие покрытия", price: 1500 },
+      {
+        id: 1,
+        name: "Маникюр с покрытием",
+        duration: 90,
+        price: 1500,
+      },
+      {
+        id: 2,
+        name: "Классический маникюр",
+        duration: 45,
+        price: 900,
+      },
     ],
-    nextAvailable: "20 окт., 13:30",
+    nextAvailable: "20 октября, 13:30",
   },
   {
     id: 2,
     name: "Барбершоп «Форма»",
+    shortName: "Форма",
     category: "Стрижка",
-    description: "Мужские стрижки и уход за бородой",
+    description: "Стрижки · Борода · Укладки",
     address: "Томск, ул. Арбат, 24",
+    city: "Томск",
+    workingHours: "Ежедневно · 10:00–20:00",
     background: "#DDE9F7",
     services: [
-      { name: "Мужская стрижка", price: 1800 },
-      { name: "Стрижка + борода", price: 2500 },
+      {
+        id: 5,
+        name: "Мужская стрижка",
+        duration: 60,
+        price: 1800,
+      },
+      {
+        id: 6,
+        name: "Стрижка + борода",
+        duration: 90,
+        price: 2500,
+      },
     ],
-    nextAvailable: "20 окт., 16:00",
-  },
-  {
-    id: 3,
-    name: "Студия бровей «Взгляд»",
-    category: "Брови",
-    description: "Профессиональное оформление бровей",
-    address: "Томск, ул. Малышева, 8",
-    background: "#F5E6D9",
-    services: [
-      { name: "Оформление бровей", price: 1200 },
-      { name: "Окрашивание бровей", price: 1500 },
-    ],
-    nextAvailable: "21 окт., 11:00",
-  },
-  {
-    id: 4,
-    name: "Салон «Гармония»",
-    category: "Массаж",
-    description: "Расслабляющий и лечебный массаж",
-    address: "Томск, ул. Пирогова, 17",
-    background: "#D9EFE7",
-    services: [
-      { name: "Классический массаж", price: 2500 },
-      { name: "Антистресс-массаж", price: 2800 },
-    ],
-    nextAvailable: "22 окт., 15:30",
+    nextAvailable: "20 октября, 14:00",
   },
 ];
