@@ -4,11 +4,13 @@ from fastapi.responses import JSONResponse
 
 from app.auth import router as auth_router
 from app.organizations import router as organizations_router
+from app.services import router as services_router
 
 
 app = FastAPI(title="ЗаписьПро API", version="0.1.0")
 app.include_router(auth_router)
 app.include_router(organizations_router)
+app.include_router(services_router)
 
 
 @app.exception_handler(RequestValidationError)

@@ -79,3 +79,66 @@ class OrganizationRead(BaseModel):
     address: str
     city: str
     phone: str | None
+
+
+class CategoryCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=100)
+
+
+class CategoryUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("Поле обязательно и не может быть null")
+        return value
+
+
+class CategoryRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+
+
+class ServiceCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    category_id: int = Field(gt=0)
+    name: str = Field(min_length=1, max_length=150)
+    description: str | None = Field(default=None, max_length=2000)
+    price: int = Field(ge=0, le=10_000_000)
+    duration: int = Field(gt=0, le=1440)
+
+
+class ServiceUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str | None = Field(default=None, min_length=1, max_length=150)
+    description: str | None = Field(default=None, max_length=2000)
+    price: int | None = Field(default=None, ge=0, le=10_000_000)
+    duration: int | None = Field(default=None, gt=0, le=1440)
+
+    @field_validator("name", "price", "duration", mode="before")
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("Поле обязательно и не может быть null")
+        return value
+
+
+class ServiceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    category_id: int
+    name: str
+    description: str | None
+    price: int
+    duration: int
