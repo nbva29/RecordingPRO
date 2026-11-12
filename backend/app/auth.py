@@ -60,6 +60,17 @@ def get_current_user(
     return user
 
 
+def get_current_admin(
+    user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    if user.role.name != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Требуются права администратора",
+        )
+    return user
+
+
 @router.post(
     "/register",
     response_model=UserRead,

@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 
 from app.database import Base, database_url, engine
-from app.models import Role, User  # Register model tables in Base.metadata.
+from app.models import Organization, Role, User  # Register model tables in Base.metadata.
 
 config = context.config
 
