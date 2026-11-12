@@ -142,3 +142,11 @@ class ServiceRead(BaseModel):
     description: str | None
     price: int
     duration: int
+
+
+class CategoryWithServices(CategoryRead):
+    services: list[ServiceRead]
+
+
+class OrganizationCard(OrganizationRead):
+    categories: list[CategoryWithServices]
