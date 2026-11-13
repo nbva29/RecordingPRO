@@ -1,7 +1,9 @@
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
     CheckConstraint,
+    DateTime,
     ForeignKey,
     String,
     Text,
@@ -29,6 +31,10 @@ class User(Base):
     name: Mapped[str | None] = mapped_column(String(100))
     phone: Mapped[str | None] = mapped_column(String(32))
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
+    password_reset_code_hash: Mapped[str | None] = mapped_column(String(64))
+    password_reset_expires_at: Mapped[datetime | None] = mapped_column(DateTime)
+    password_reset_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
+    password_reset_attempts: Mapped[int] = mapped_column(default=0, server_default="0")
 
     role: Mapped[Role] = relationship()
 

@@ -43,6 +43,50 @@ class UserRead(BaseModel):
     role: RoleRead
 
 
+class UserUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    phone: str | None = Field(default=None, min_length=1, max_length=32)
+
+
+class PasswordChange(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+
+    current_password: SecretStr = Field(min_length=1, max_length=128)
+    new_password: SecretStr = Field(min_length=8, max_length=128)
+
+
+class PasswordResetRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+
+    email: EmailStr = Field(max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.lower()
+
+
+class PasswordResetConfirm(PasswordResetRequest):
+    code: SecretStr = Field(
+        min_length=6, max_length=6, description="Шестизначный код из письма"
+    )
+    new_password: SecretStr = Field(min_length=8, max_length=128)
+
+    @field_validator("code")
+    @classmethod
+    def validate_code(cls, value: SecretStr) -> SecretStr:
+        code = value.get_secret_value()
+        if not code.isascii() or not code.isdigit():
+            raise ValueError("Код должен состоять из 6 цифр")
+        return value
+
+
+class MessageRead(BaseModel):
+    detail: str
+
+
 class OrganizationCreate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
