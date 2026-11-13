@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   List,
 } from "lucide-react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar/Sidebar";
 import type { SidebarItem } from "../components/layout/Sidebar/Sidebar";
 import styles from "./Layout.module.css";

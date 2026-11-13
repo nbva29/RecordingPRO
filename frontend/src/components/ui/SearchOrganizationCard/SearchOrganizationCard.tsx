@@ -1,19 +1,8 @@
 import { Link } from "react-router-dom";
 import styles from "./SearchOrganizationCard.module.css";
+import type { Organization } from "../../../types/organization";
 
-export interface SearchOrganization {
-  id: number;
-  name: string;
-  category: string;
-  description: string;
-  address: string;
-  background: string;
-  services: {
-    name: string;
-    price: number;
-  }[];
-  nextAvailable: string;
-}
+export type SearchOrganization = Organization;
 
 interface SearchOrganizationCardProps {
   organization: SearchOrganization;
@@ -33,32 +22,33 @@ export function SearchOrganizationCard({
         <div className={styles.information}>
           <div className={styles.heading}>
             <h3>{organization.name}</h3>
-            <span className={styles.category}>{organization.category}</span>
+            {organization.categories?.length ? <span className={styles.category}>{organization.categories.map(({ name }) => name).join(" · ")}</span> : null}
           </div>
 
-          <p className={styles.description}>{organization.description}</p>
+          {organization.description && <p className={styles.description}>{organization.description}</p>}
 
-          <p className={styles.address}>{organization.address}</p>
+          <p className={styles.address}>{organization.city} · {organization.address}</p>
         </div>
       </div>
 
       <div className={styles.bottom}>
         <div className={styles.services}>
           {organization.services.map((service) => (
-            <div key={service.name} className={styles.service}>
+            <div key={service.id} className={styles.service}>
               <span>{service.name}</span>
               <strong>{service.price.toLocaleString("ru-RU")} ₽</strong>
             </div>
           ))}
+          {organization.services.length === 0 && <p>У этой организации пока нет доступных услуг.</p>}
         </div>
 
         <div className={styles.booking}>
-          <span className={styles.bookingLabel}>Ближайшее время</span>
-
-          <span className={styles.bookingTime}>
-            {organization.nextAvailable}
-          </span>
-
+          {organization.phone?.trim() && (
+            <>
+              <span className={styles.bookingLabel}>Телефон</span>
+              <span className={styles.bookingPhone}>{organization.phone}</span>
+            </>
+          )}
           <Link
             to={`/organizations/${organization.id}`}
             className={styles.bookingButton}

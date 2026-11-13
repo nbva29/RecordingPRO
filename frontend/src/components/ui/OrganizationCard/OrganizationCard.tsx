@@ -3,16 +3,14 @@ import styles from "./OrganizationCard.module.css";
 
 interface OrganizationCardProps {
   id: number;
-  shortName: string;
   name: string;
-  description: string;
-  price: number;
+  description: string | null;
+  price?: number;
   background: string;
 }
 
 export function OrganizationCard({
   id,
-  shortName,
   name,
   description,
   price,
@@ -21,17 +19,17 @@ export function OrganizationCard({
   return (
     <article className={styles.card}>
       <div className={styles.banner} style={{ backgroundColor: background }}>
-        <span>{shortName}</span>
+        <span>{name}</span>
       </div>
 
       <div className={styles.content}>
         <h3>{name}</h3>
-        <p>{description}</p>
+        {description && <p>{description}</p>}
 
         <div className={styles.footer}>
-          <span className={styles.price}>
+          {price !== undefined && <span className={styles.price}>
             От {price.toLocaleString("ru-RU")} ₽
-          </span>
+          </span>}
 
           <Link to={`/organizations/${id}`} className={styles.detailsButton}>
             Подробнее

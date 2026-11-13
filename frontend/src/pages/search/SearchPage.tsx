@@ -1,70 +1,41 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import type { SetURLSearchParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button/Button";
 import { Heading } from "../../components/ui/Heading/Heading";
 import { SearchOrganizationCard } from "../../components/ui/SearchOrganizationCard/SearchOrganizationCard";
-import { mockOrganizations } from "../../data/mockOrganizations";
+import { useCatalogCategories, useOrganizations } from "../../hooks/useCatalog";
+import { RequestError } from "../../components/ui/RequestError";
 import styles from "./SearchPage.module.css";
-
-const categories = [
-  "Все категории",
-  "Маникюр",
-  "Стрижка",
-  "Брови",
-  "Массаж",
-  "Косметология",
-  "Эпиляция",
-  "Другое",
-];
-
-const normalizeText = (text: string) =>
-  text
-    .toLocaleLowerCase("ru-RU")
-    .replace(/[«»"'.,]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  return <SearchPageContent key={searchParams.toString()} searchParams={searchParams} setSearchParams={setSearchParams} />;
+}
+
+function SearchPageContent({ searchParams, setSearchParams }: {
+  searchParams: URLSearchParams;
+  setSearchParams: SetURLSearchParams;
+}) {
 
   const [search, setSearch] = useState(searchParams.get("service") ?? "");
 
-  const [city, setCity] = useState(searchParams.get("city") ?? "Томск");
+  const [city, setCity] = useState(searchParams.get("city") ?? "");
 
-  useEffect(() => {
-    setSearch(searchParams.get("service") ?? "");
-    setCity(searchParams.get("city") ?? "Томск");
-  }, [searchParams]);
+  const selectedCategory = searchParams.get("category");
 
-  const selectedCategory = searchParams.get("category") ?? "Все категории";
-
-  const selectedService = normalizeText(searchParams.get("service") ?? "");
-
-  const selectedCity = normalizeText(searchParams.get("city") ?? "");
-
-  const filteredOrganizations = mockOrganizations.filter((organization) => {
-    const matchesCategory =
-      selectedCategory === "Все категории" ||
-      organization.category === selectedCategory;
-
-    const searchableText = normalizeText(
-      [
-        organization.name,
-        organization.description,
-        organization.category,
-        ...organization.services.map((service) => service.name),
-      ].join(" "),
-    );
-
-    const matchesService =
-      !selectedService || searchableText.includes(selectedService);
-
-    const matchesCity =
-      !selectedCity ||
-      normalizeText(organization.address).includes(selectedCity);
-
-    return matchesCategory && matchesService && matchesCity;
+  const categoryQuery = useCatalogCategories();
+  const categories: { value: string | null; label: string }[] = [
+    { value: null, label: "Все категории" },
+    ...(categoryQuery.data ?? []).map((name) => ({ value: name, label: name })),
+  ];
+  const organizationsQuery = useOrganizations({
+    search: searchParams.get("service") ?? undefined,
+    city: searchParams.get("city") ?? undefined,
+    category: selectedCategory ?? undefined,
   });
+  const filteredOrganizations = organizationsQuery.data ?? [];
+  const hasFilters = ["service", "city", "category"].some((key) => searchParams.get(key)?.trim());
 
   const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -86,10 +57,10 @@ export function SearchPage() {
     setSearchParams(params);
   };
 
-  const handleCategory = (category: string) => {
+  const handleCategory = (category: string | null) => {
     const params = new URLSearchParams(searchParams);
 
-    if (category === "Все категории") {
+    if (category === null) {
       params.delete("category");
     } else {
       params.set("category", category);
@@ -100,14 +71,16 @@ export function SearchPage() {
 
   return (
     <main className={styles.searchPage}>
-      <Heading title="Найти услугу" />
+      <Heading title="Найти организацию" />
 
       <form className={styles.searchForm} onSubmit={handleSearch}>
         <div className={styles.searchFields}>
           <input
             className={styles.searchInput}
             type="text"
-            placeholder="Название услуги, организации или специалиста"
+            placeholder="Название организации"
+            aria-label="Название организации"
+            maxLength={150}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -118,6 +91,7 @@ export function SearchPage() {
               type="text"
               aria-label="Город"
               placeholder="Город"
+              maxLength={100}
               value={city}
               onChange={(event) => setCity(event.target.value)}
             />
@@ -129,26 +103,31 @@ export function SearchPage() {
         </Button>
       </form>
 
+      {categoryQuery.isPending && <p role="status">Загрузка категорий...</p>}
+      {categoryQuery.isError && <RequestError error={categoryQuery.error} onRetry={categoryQuery.refetch} />}
       <div className={styles.categories}>
         {categories.map((category) => (
           <button
-            key={category}
+            key={category.value === null ? "all" : `category:${category.value}`}
             type="button"
             className={[
               styles.category,
-              selectedCategory === category ? styles.active : "",
+              selectedCategory === category.value ? styles.active : "",
             ]
               .filter(Boolean)
               .join(" ")}
-            onClick={() => handleCategory(category)}
+            aria-pressed={selectedCategory === category.value}
+            onClick={() => handleCategory(category.value)}
           >
-            {category}
+            {category.label}
           </button>
         ))}
       </div>
 
       <div className={styles.results}>
-        {filteredOrganizations.length > 0 ? (
+        {organizationsQuery.isPending ? <p role="status">Загрузка организаций...</p> :
+        organizationsQuery.isError ? <RequestError error={organizationsQuery.error} onRetry={organizationsQuery.refetch} /> :
+        filteredOrganizations.length > 0 ? (
           filteredOrganizations.map((organization) => (
             <SearchOrganizationCard
               key={organization.id}
@@ -157,7 +136,7 @@ export function SearchPage() {
           ))
         ) : (
           <p className={styles.empty}>
-            По вашему запросу организации не найдены
+            {hasFilters ? "По вашему запросу организации не найдены" : "В каталоге пока нет организаций"}
           </p>
         )}
       </div>
