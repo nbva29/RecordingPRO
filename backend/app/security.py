@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+from hmac import new as hmac_new
 from uuid import UUID
 
 import jwt
@@ -9,6 +11,14 @@ from app.config import settings
 
 password_hash = PasswordHash.recommended()
 JWT_ALGORITHM = "HS256"
+
+
+def hash_reset_code(user_id: UUID, code: str) -> str:
+    return hmac_new(
+        settings.jwt_secret_key.get_secret_value().encode(),
+        f"password-reset:{user_id}:{code}".encode(),
+        sha256,
+    ).hexdigest()
 
 
 def hash_password(password: str) -> str:

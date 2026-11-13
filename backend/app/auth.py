@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta, timezone
+from secrets import compare_digest, randbelow
+from smtplib import SMTPException
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -9,9 +12,13 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
+from app.mail import send_password_reset_email
 from app.models import Role, User
 from app.schemas import (
+    MessageRead,
     PasswordChange,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     TokenRead,
     UserCreate,
     UserLogin,
@@ -22,6 +29,7 @@ from app.security import (
     create_access_token,
     decode_access_token,
     hash_password,
+    hash_reset_code,
     verify_password,
 )
 
@@ -30,6 +38,8 @@ router = APIRouter(prefix="/api/auth", tags=["Авторизация"])
 bearer_scheme = HTTPBearer(auto_error=False)
 # Unknown accounts still go through password verification.
 DUMMY_PASSWORD_HASH = hash_password("not-a-real-account-password")
+PASSWORD_RESET_MAX_ATTEMPTS = 5
+PASSWORD_RESET_RESEND_SECONDS = 60
 
 
 def email_conflict() -> HTTPException:
@@ -196,5 +206,119 @@ def change_password(
         )
 
     user.password_hash = hash_password(data.new_password.get_secret_value())
+    user.password_reset_code_hash = None
+    user.password_reset_expires_at = None
+    user.password_reset_sent_at = None
+    user.password_reset_attempts = 0
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=MessageRead,
+    summary="Запросить восстановление пароля по email",
+    responses={
+        429: {"description": "Повторный запрос кода доступен через минуту"},
+        503: {"description": "Отправка писем временно недоступна"},
+    },
+)
+def request_password_reset(
+    data: PasswordResetRequest,
+    db: Annotated[Session, Depends(get_db)],
+) -> MessageRead:
+    if not (
+        settings.smtp_host
+        and settings.smtp_user
+        and settings.smtp_password.get_secret_value()
+        and settings.smtp_from
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Восстановление пароля временно недоступно",
+        )
+
+    user = db.scalar(select(User).where(User.email == data.email).with_for_update())
+    if user is not None:
+        # MySQL DATETIME stores UTC without timezone information.
+        now = datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+        if (
+            user.password_reset_sent_at is not None
+            and now < user.password_reset_sent_at
+            + timedelta(seconds=PASSWORD_RESET_RESEND_SECONDS)
+        ):
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Повторно запросить код можно через минуту",
+            )
+        code = f"{randbelow(1_000_000):06d}"
+        user.password_reset_code_hash = hash_reset_code(user.id, code)
+        user.password_reset_expires_at = now + timedelta(
+            minutes=settings.password_reset_expire_minutes
+        )
+        user.password_reset_sent_at = now
+        user.password_reset_attempts = 0
+        db.flush()
+        try:
+            send_password_reset_email(user.email, code)
+        except (SMTPException, OSError):
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Восстановление пароля временно недоступно",
+            ) from None
+        db.commit()
+
+    return MessageRead(
+        detail="Если email зарегистрирован, на него отправлено письмо восстановления"
+    )
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    summary="Задать новый пароль по коду из письма",
+    responses={400: {"description": "Недействительный или просроченный код"}},
+)
+def reset_password(
+    data: PasswordResetConfirm,
+    db: Annotated[Session, Depends(get_db)],
+) -> Response:
+    # Lock the account so concurrent requests cannot reuse a code or lose attempts.
+    user = db.scalar(
+        select(User).where(User.email == data.email).with_for_update()
+    )
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if (
+        user is None
+        or user.password_reset_code_hash is None
+        or user.password_reset_expires_at is None
+        or user.password_reset_expires_at <= now
+        or user.password_reset_attempts >= PASSWORD_RESET_MAX_ATTEMPTS
+    ):
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Недействительный или просроченный код",
+        )
+
+    code_hash = hash_reset_code(user.id, data.code.get_secret_value())
+    if not compare_digest(code_hash, user.password_reset_code_hash):
+        user.password_reset_attempts += 1
+        if user.password_reset_attempts >= PASSWORD_RESET_MAX_ATTEMPTS:
+            user.password_reset_code_hash = None
+            user.password_reset_expires_at = None
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Недействительный или просроченный код",
+        )
+
+    user.password_hash = hash_password(data.new_password.get_secret_value())
+    user.password_reset_code_hash = None
+    user.password_reset_expires_at = None
+    user.password_reset_attempts = 0
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
