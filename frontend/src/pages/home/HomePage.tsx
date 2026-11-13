@@ -6,12 +6,18 @@ import styles from "./HomePage.module.css";
 import { CategoryCard } from "../../components/ui/CategoryCard/CategoryCard";
 
 import { OrganizationCard } from "../../components/ui/OrganizationCard/OrganizationCard";
+import { useCatalogCategories, useOrganizations } from "../../hooks/useCatalog";
+import { RequestError } from "../../components/ui/RequestError";
 
 export function HomePage() {
   const navigate = useNavigate();
 
   const [service, setService] = useState("");
   const [city, setCity] = useState("Томск");
+  const categoryQuery = useCatalogCategories();
+  const organizationsQuery = useOrganizations({ city });
+  const categories = categoryQuery.data ?? [];
+  const organizations = (organizationsQuery.data ?? []).slice(0, 3);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -26,40 +32,6 @@ export function HomePage() {
 
     navigate(`/search?${params.toString()}`);
   };
-  const categories = [
-    "Парикмахерские",
-    "Маникюр",
-    "Косметология",
-    "Массаж",
-    "Барбершопы",
-  ];
-
-  const organizations = [
-    {
-      id: 1,
-      shortName: "ЛАЙМ",
-      name: "Студия красоты «Лайм»",
-      description: "Маникюр · Брови · Ресницы",
-      price: 900,
-      background: "#D9EFE7",
-    },
-    {
-      id: 2,
-      shortName: "ФОРМА",
-      name: "Барбершоп «Форма»",
-      description: "Стрижки · Борода · Укладки",
-      price: 1200,
-      background: "#DDE9F7",
-    },
-    {
-      id: 3,
-      shortName: "БАЛАНС",
-      name: "Массажная студия «Баланс»",
-      description: "Массаж · Уход за телом",
-      price: 1600,
-      background: "#F5E6D9",
-    },
-  ];
   return (
     <main>
       <Heading
@@ -75,11 +47,12 @@ export function HomePage() {
         }}
       >
         <div className={styles.field}>
-          <label htmlFor="service">УСЛУГА</label>
+          <label htmlFor="service">ОРГАНИЗАЦИЯ</label>
           <input
             id="service"
             type="text"
-            placeholder="Маникюр, стрижка, массаж..."
+            placeholder="Название организации"
+            maxLength={150}
             value={service}
             onChange={(event) => setService(event.target.value)}
           />
@@ -91,6 +64,7 @@ export function HomePage() {
             id="city"
             type="text"
             placeholder="Томск"
+            maxLength={100}
             value={city}
             onChange={(event) => setCity(event.target.value)}
           />
@@ -101,7 +75,16 @@ export function HomePage() {
         </Button>
       </form>
       <section className={styles.categories}>
-        <h2>Популярные категории</h2>
+        {categoryQuery.isPending && <p role="status">Загрузка категорий...</p>}
+        {categoryQuery.isError && (
+          <RequestError
+            error={categoryQuery.error}
+            onRetry={categoryQuery.refetch}
+          />
+        )}
+        {categoryQuery.isSuccess && categories.length === 0 && (
+          <p>Категорий пока нет.</p>
+        )}
 
         <div className={styles.categoryGrid}>
           {categories.map((category) => (
@@ -118,12 +101,34 @@ export function HomePage() {
         </div>
       </section>
       <section className={styles.organizations}>
-        <h2>Организации рядом</h2>
+        {organizationsQuery.isPending && (
+          <p role="status">Загрузка организаций...</p>
+        )}
+        {organizationsQuery.isError && (
+          <RequestError
+            error={organizationsQuery.error}
+            onRetry={organizationsQuery.refetch}
+          />
+        )}
+        {organizationsQuery.isSuccess && organizations.length === 0 && (
+          <p>Организации не найдены.</p>
+        )}
 
         <div className={styles.organizationGrid}>
-          {organizations.map((organization) => (
-            <OrganizationCard key={organization.id} {...organization} />
-          ))}
+          {!organizationsQuery.isError &&
+            organizations.map((organization) => (
+              <OrganizationCard
+                key={organization.id}
+                {...organization}
+                price={
+                  organization.services.length
+                    ? Math.min(
+                        ...organization.services.map(({ price }) => price),
+                      )
+                    : undefined
+                }
+              />
+            ))}
         </div>
       </section>
     </main>

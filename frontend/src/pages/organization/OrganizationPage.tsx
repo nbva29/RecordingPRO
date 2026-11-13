@@ -1,60 +1,30 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button/Button";
-import { organizationService } from "../../services/organizationService";
-import type { Organization } from "../../types/organization";
+import { useOrganization } from "../../hooks/useCatalog";
+import { ApiError } from "../../api/httpClient";
+import { RequestError } from "../../components/ui/RequestError";
 import styles from "./OrganizationPage.module.css";
 import { ServiceCard } from "../../components/ui/ServiceCard/ServiceCard";
 
 export function OrganizationPage() {
   const { id } = useParams<{ id: string }>();
 
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [loading, setLoading] = useState(true);
+  const parsedId = Number(id);
+  const organizationId = /^\d+$/.test(id ?? "") && Number.isSafeInteger(parsedId) && parsedId > 0 ? parsedId : null;
+  const query = useOrganization(organizationId);
+  const organization = query.data;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadOrganization() {
-      setLoading(true);
-      setOrganization(null);
-
-      const organizationId = Number(id);
-
-      try {
-        const data =
-          Number.isSafeInteger(organizationId) && organizationId > 0
-            ? await organizationService.getById(organizationId)
-            : null;
-
-        if (!cancelled) {
-          setOrganization(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setOrganization(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadOrganization();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  if (loading) {
+  if (organizationId === null || (query.error instanceof ApiError && query.error.status === 404)) {
+    return <main className={styles.page}>Организация не найдена</main>;
+  }
+  if (query.isPending) {
     return <main className={styles.page}>Загрузка организации...</main>;
   }
 
-  if (!organization) {
-    return <main className={styles.page}>Организация не найдена</main>;
+  if (query.isError) {
+    return <main className={styles.page}><RequestError error={query.error} onRetry={query.refetch} /></main>;
   }
+  if (!organization) return null;
 
   return (
     <main>
@@ -63,16 +33,16 @@ export function OrganizationPage() {
           className={styles.organizationBanner}
           style={{ backgroundColor: organization.background }}
         >
-          <span className={styles.category}>{organization.category}</span>
+          {organization.categories?.length ? <span className={styles.category}>{organization.categories.map(({ name }) => name).join(" · ")}</span> : null}
 
-          <h1>{organization.shortName}</h1>
+          <h1>{organization.name}</h1>
 
-          <p>{organization.description}</p>
+          {organization.description && <p>{organization.description}</p>}
         </div>
 
         <div className={styles.organizationAddress}>
           <h2>{organization.address}</h2>
-          <p>{organization.workingHours}</p>
+          <p>{organization.city}</p>
 
           <Button className={styles.bookingButton}>Записаться онлайн →</Button>
         </div>
