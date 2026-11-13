@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy import select
@@ -10,7 +10,14 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models import Role, User
-from app.schemas import TokenRead, UserCreate, UserLogin, UserRead
+from app.schemas import (
+    PasswordChange,
+    TokenRead,
+    UserCreate,
+    UserLogin,
+    UserRead,
+    UserUpdate,
+)
 from app.security import (
     create_access_token,
     decode_access_token,
@@ -144,3 +151,50 @@ def current_user(
     user: Annotated[User, Depends(get_current_user)],
 ) -> UserRead:
     return UserRead.model_validate(user)
+
+
+@router.patch(
+    "/me",
+    response_model=UserRead,
+    summary="Изменить имя и телефон текущего пользователя",
+    responses={401: {"description": "Требуется действительный Bearer-токен"}},
+)
+def update_current_user(
+    data: UserUpdate,
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> UserRead:
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(user, field, value)
+
+    db.commit()
+    db.refresh(user)
+    return UserRead.model_validate(user)
+
+
+@router.post(
+    "/change-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    summary="Сменить пароль текущего пользователя",
+    responses={
+        400: {"description": "Неверный текущий пароль"},
+        401: {"description": "Требуется действительный Bearer-токен"},
+    },
+)
+def change_password(
+    data: PasswordChange,
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> Response:
+    if not verify_password(
+        data.current_password.get_secret_value(), user.password_hash
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Неверный текущий пароль",
+        )
+
+    user.password_hash = hash_password(data.new_password.get_secret_value())
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
