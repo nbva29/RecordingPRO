@@ -1,108 +1,256 @@
-@font-face {
-  font-family: 'AuthInter';
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('../../assets/fonts/InterVariable.woff2') format('woff2');
-}
-
-.root {
+.card {
   position: relative;
-  width: min(100%, 896px);
+  width: 680px;
   margin: 0 auto;
-  padding: 40px 75px 55px 66px;
+  padding: 28px 40px;
   border: 1px solid var(--color-border);
   border-radius: 24px;
-  color: var(--color-text-primary);
   background: var(--color-white);
-  font-family: 'AuthInter', var(--font-family);
 }
 
-.registration { width: min(100%, 680px); min-height: 0; padding: 24px 40px 20px; }
-.root .title { margin: 0; font-size: 42px; font-weight: 700; line-height: 52px; }
-.registration .title { font-size: 32px; line-height: 40px; }
-.subtitle { margin: 8px 0 56px; color: var(--color-text-secondary); font-size: 22px; line-height: 28px; }
-.registration .subtitle { margin: 4px 0 16px; font-size: 16px; line-height: 22px; }
-.fields { min-width: 0; margin: 0; padding: 0; border: 0; }
-.inputs { display: grid; gap: 41px; }
-.registration .inputs { gap: 10px; }
-.field { display: grid; gap: 12px; }
-.registration .field { gap: 6px; }
-.label { color: var(--color-text-secondary); font-size: 16px; font-weight: 700; line-height: 20px; text-transform: uppercase; }
-.input { width: 100%; min-width: 0; height: 58px; padding: 0 22px; border: 1px solid var(--color-border); border-radius: 12px; color: var(--color-text-primary); background: var(--color-white); font-size: 20px; line-height: 26px; }
-.registration .label { font-size: 12px; line-height: 16px; }
-.registration .input { height: 42px; padding: 0 16px; border-radius: 10px; font-size: 16px; line-height: 22px; }
-.input::placeholder { color: var(--color-text-secondary); opacity: 1; }
-.input:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
-.input:disabled { background: var(--color-card); }
-.consent { display: flex; align-items: flex-start; gap: 5px; margin: 35px 0 44px; color: var(--color-text-secondary); font-size: 18px; line-height: 26px; }
-.consent input { flex: 0 0 auto; width: 16px; height: 16px; margin: 5px 0 0; accent-color: var(--color-primary); }
-.registration .consent { margin: 16px 0 20px; font-size: 14px; line-height: 20px; }
-.registration .consent input { width: 16px; height: 16px; margin-top: 2px; }
-.policy { color: var(--color-primary); font-weight: 700; }
-.error { margin: 0; color: #d66666; font-size: 16px; font-weight: 600; line-height: 24px; overflow-wrap: anywhere; }
-.loginFeedback { min-height: 24px; margin-top: 6px; }
-.registrationFeedback:has(.error) { margin: -12px 0 4px; }
-.registration .error { font-size: 14px; line-height: 20px; }
-.recovery { display: block; margin: 15px auto 0; padding: 0; border: 0; color: var(--color-primary); background: none; font-size: 20px; font-weight: 600; line-height: 28px; cursor: pointer; }
-.recovery:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 4px; }
-.recovery:disabled { cursor: default; opacity: 0.6; }
-.root .submit { display: flex; width: min(100%, 410px); height: 60px; gap: 5px; margin: 48px auto 0; padding: 0 24px; border-radius: 10px; font-size: 22px; line-height: 1; }
-.registration .submit { width: min(100%, 340px); height: 44px; margin-top: 0; padding: 0 16px; font-size: 17px; }
-.footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 54px; margin: 48px 0 0; color: var(--color-text-secondary); font-size: 20px; line-height: 28px; }
-.footer a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
-.footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
-.registration .footer { column-gap: 40px; margin-top: 12px; font-size: 14px; line-height: 20px; }
-.adminLink { display: block; width: fit-content; max-width: 100%; margin: 24px auto 0; color: var(--color-text-secondary); font-size: 18px; line-height: 26px; text-align: center; text-decoration: none; }
-.adminLink:hover { color: var(--color-text-primary); text-decoration: underline; text-underline-offset: 4px; }
-.srOnly { position: absolute; top: 0; left: 0; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-
-/* Other pages retain the existing desktop minimum width. */
-:global(body:has([data-auth-page])) { min-width: 320px; }
-@media (max-width: 960px) {
-  .root, .admin { min-height: 0; padding: 32px; }
-  .root.registration { padding: 24px 40px 20px; }
-  .root .title { font-size: 32px; line-height: 40px; }
-  .registration .title { font-size: 32px; line-height: 40px; }
-  .subtitle, .admin .subtitle { margin: 6px 0 40px; font-size: 18px; line-height: 26px; }
-  .registration .subtitle { margin: 4px 0 16px; font-size: 16px; line-height: 22px; }
-  .inputs, .admin .inputs { gap: 28px; }
-  .registration .inputs { gap: 10px; }
-  .field { gap: 8px; }
-  .label { font-size: 12px; line-height: 18px; }
-  .input, .admin .input { height: 48px; padding: 0 16px; font-size: 16px; line-height: 24px; }
-  .consent { margin: 28px 0; font-size: 14px; line-height: 22px; }
-  .consent input { margin-top: 3px; }
-  .error { font-size: 14px; line-height: 22px; }
-  .recovery { font-size: 16px; line-height: 26px; }
-  .root .submit, .admin .submit { height: 48px; margin-top: 28px; font-size: 18px; }
-  .root.registration .submit { height: 44px; margin-top: 0; font-size: 17px; }
-  .footer { margin-top: 32px; font-size: 16px; line-height: 24px; }
-  .registration .footer { column-gap: 40px; margin-top: 12px; font-size: 14px; line-height: 20px; }
-  .adminLink { margin-top: 20px; font-size: 16px; line-height: 24px; }
+.client,
+.admin {
+  min-height: 563px;
 }
-@media (max-width: 480px) {
-  .root, .admin { padding: 28px 24px; border-radius: 20px; }
-  .root.registration { padding: 20px 24px 16px; }
-  .root .title { font-size: 28px; line-height: 36px; }
-  .footer { column-gap: 24px; }
-}
-.root.client, .root.admin { width: min(100%, 680px); min-height: 0; padding: 28px clamp(20px, 4vw, 40px); }
-/* Keep the admin card as tall as the client card, which also has footer links. */
-.root.admin { min-height: 563px; }
-.client .title, .admin .title { font-size: clamp(28px, 3vw, 34px); line-height: 1.25; }
-.client .subtitle, .admin .subtitle { margin: 6px 0 28px; font-size: 18px; line-height: 26px; }
-.client .inputs, .admin .inputs { gap: 24px; }
-.client .field, .admin .field { gap: 8px; }
-.client .label, .admin .label { font-size: 14px; line-height: 18px; }
-.client .input, .admin .input { height: 46px; padding: 0 16px; font-size: clamp(16px, 1.8vw, 18px); line-height: 24px; }
-.client .recovery, .admin .recovery { margin-top: 10px; font-size: 18px; line-height: 26px; }
-.client .submit, .admin .submit { width: min(100%, 320px); height: 48px; margin-top: 28px; font-size: 18px; }
-.client .footer { gap: 8px 28px; margin-top: 28px; font-size: 16px; line-height: 24px; }
-.client .adminLink { margin-top: 16px; font-size: 16px; line-height: 24px; }
 
-@media (max-height: 760px) and (min-width: 961px) {
-  .registration { padding-top: 20px; }
-  .registration .input { height: 38px; }
-  .registration .inputs { gap: 8px; }
+.title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.subtitle {
+  margin: 6px 0 28px;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.inputs {
+  display: grid;
+  gap: 24px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.label {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: inherit;
+  background: var(--color-white);
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.input:disabled {
+  background: var(--color-card);
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 16px 0 20px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.consent input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--color-primary);
+}
+
+.policy {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.error {
+  margin: 0;
+  color: #d66666;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+
+.loginFeedback {
+  min-height: 24px;
+  margin-top: 6px;
+}
+
+.registrationFeedback:has(.error) {
+  margin: -16px 0 0;
+}
+
+.recovery {
+  display: block;
+  margin: 10px auto 0;
+  padding: 0;
+  border: 0;
+  color: var(--color-primary);
+  background: none;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+  cursor: pointer;
+}
+
+.recovery:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.recovery:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.card .submit {
+  display: flex;
+  width: 320px;
+  height: 48px;
+  gap: 5px;
+  margin: 28px auto 0;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin: 28px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.footer a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.adminLink {
+  display: block;
+  width: fit-content;
+  margin: 16px auto 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.adminLink:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.registration {
+  padding: 20px 40px;
+}
+
+.registration .title {
+  font-size: 32px;
+  line-height: 40px;
+}
+
+.registration .subtitle {
+  margin: 4px 0 16px;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.registration .inputs {
+  gap: 8px;
+}
+
+.registration .field {
+  gap: 6px;
+}
+
+.registration .label {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.registration .input {
+  height: 40px;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.registration .error {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.registration .submit {
+  width: 340px;
+  height: 44px;
+  margin-top: 0;
+  padding: 0 16px;
+  font-size: 17px;
+}
+
+.registration .footer {
+  column-gap: 40px;
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.srOnly {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

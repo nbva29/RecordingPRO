@@ -1,21 +1,26 @@
-.shell { display: flex; flex-direction: column; min-height: 100dvh; }
-.main { flex: 1; width: 100%; padding: 121px 24px 90px; }
-.client { background: #d9efe7; }
-.main.client, .main.admin { display: flex; align-items: center; justify-content: center; padding: 24px 20px; }
-.admin { background: #d9f5eb; }
-.main.registration { display: flex; align-items: center; justify-content: center; padding: 16px 20px; background: var(--color-background); }
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-@media (max-height: 950px) and (min-width: 961px) {
-  .main { padding-top: 40px; padding-bottom: 40px; }
+.main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
 }
-@media (max-width: 960px) {
-  .main { padding: 32px 20px; }
+
+.client {
+  background: var(--color-card-green);
 }
-@media (max-width: 480px) {
-  .main { padding: 24px 16px; }
-  .main.client, .main.admin { padding: 16px; }
-  .main.registration { padding: 12px 16px; }
+
+.admin {
+  background: #d9f5eb;
 }
-@media (max-height: 760px) and (min-width: 961px) {
-  .main.registration { padding: 8px 20px; }
+
+.registration {
+  padding: 8px 20px;
+  background: var(--color-background);
 }

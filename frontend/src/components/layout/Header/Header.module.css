@@ -48,11 +48,7 @@
   text-underline-offset: 4px;
 }
 
-.authHeader { flex-shrink: 0; padding: 0 72px 0 62px; font-family: 'AuthInter', var(--font-family); }
-
-@media (max-width: 760px) {
-  .authHeader { height: auto; min-height: 80px; padding: 16px 24px; flex-wrap: wrap; gap: 16px; }
-  .authHeader .brand, .authHeader .actions { flex: 0 1 auto; }
-  .authHeader .actions { margin-left: auto; }
-  .authHeader .actions .loginButton { width: auto; max-width: 100%; height: 44px; padding: 0 20px; font-size: 16px; }
+.authHeader {
+  flex-shrink: 0;
+  padding: 0 72px 0 62px;
 }

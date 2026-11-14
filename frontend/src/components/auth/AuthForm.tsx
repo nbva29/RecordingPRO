@@ -72,7 +72,7 @@ export function AuthForm({ mode, audience = 'client', onSubmit, onForgotPassword
   }
 
   return (
-    <section className={[styles.root, register ? styles.registration : audience === 'admin' ? styles.admin : styles.client].join(' ')} data-auth-page data-auth-audience={register ? 'client' : audience} aria-labelledby={titleId}>
+    <section className={[styles.card, register ? styles.registration : audience === 'admin' ? styles.admin : styles.client].join(' ')} data-auth-page data-auth-audience={register ? 'client' : audience} aria-labelledby={titleId}>
       <h1 className={styles.title} id={titleId}>{register ? 'Регистрация' : 'Вход в аккаунт'}</h1>
       <p className={styles.subtitle}>{register ? 'Создайте новый аккаунт' : 'Введите email и пароль'}</p>
 
