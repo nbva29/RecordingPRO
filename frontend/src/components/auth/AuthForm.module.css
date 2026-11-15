@@ -101,6 +101,18 @@
   background: var(--color-card);
 }
 
+.input[readonly] {
+  background: var(--color-card);
+}
+
+.success {
+  margin: 12px 0 0;
+  color: var(--color-primary);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+
 .consent {
   display: flex;
   align-items: flex-start;
