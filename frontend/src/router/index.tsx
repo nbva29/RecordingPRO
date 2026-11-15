@@ -1,5 +1,6 @@
 import type { RouteObject } from "react-router-dom";
 import { AdminLayout } from "../layouts/AdminLayout";
+import { AuthLayout } from "../layouts/AuthLayout";
 import { ClientLayout } from "../layouts/ClientLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
 import { BookingPage } from "../pages/BookingPage";
@@ -24,7 +25,13 @@ export const routes: RouteObject[] = [
       { path: "search", element: <SearchPage /> },
       { path: "organizations/:id", element: <OrganizationPage /> },
       { path: "booking/:id", element: <BookingPage /> },
+    ],
+  },
+  {
+    element: <AuthLayout />,
+    children: [
       { path: "login", element: <LoginPage /> },
+      { path: "admin/login", element: <LoginPage audience="admin" /> },
       { path: "register", element: <RegisterPage /> },
     ],
   },

@@ -1,0 +1,26 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+}
+
+.client {
+  background: var(--color-card-green);
+}
+
+.admin {
+  background: #d9f5eb;
+}
+
+.registration {
+  padding: 8px 20px;
+  background: var(--color-background);
+}
