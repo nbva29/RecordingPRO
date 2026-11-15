@@ -23,3 +23,9 @@ export interface AuthProfileInput {
   name: string
   phone: string
 }
+
+export interface PasswordResetInput {
+  email: string
+  code: string
+  new_password: string
+}

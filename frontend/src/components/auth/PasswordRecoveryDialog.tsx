@@ -8,8 +8,8 @@ import styles from './PasswordRecoveryDialog.module.css'
 
 interface PasswordRecoveryDialogProps {
   onClose: () => void
-  onRequestCode?: (email: string) => void | Promise<void>
-  onConfirm?: (values: RecoveryValues) => void | Promise<void>
+  onRequestCode?: (email: string, signal?: AbortSignal) => void | Promise<void>
+  onConfirm?: (values: RecoveryValues, signal?: AbortSignal) => void | Promise<void>
 }
 
 const emptyValues: RecoveryValues = { email: '', code: '', newPassword: '' }
@@ -18,6 +18,7 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
   const dialogRef = useRef<HTMLDialogElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const pendingRef = useRef(false)
+  const requestController = useRef<AbortController | null>(null)
   const titleId = useId()
   const [values, setValues] = useState(emptyValues)
   const [errors, setErrors] = useState<RecoveryFieldErrors>({})
@@ -25,6 +26,20 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
   const [message, setMessage] = useState('')
   const [pending, setPending] = useState<'code' | 'confirm' | null>(null)
   const [success, setSuccess] = useState(false)
+  const [resend, setResend] = useState<{ email: string; until: number } | null>(null)
+  const [now, setNow] = useState(Date.now)
+  const cooldown = resend?.email === values.email.trim().toLowerCase()
+    ? Math.max(0, Math.ceil((resend.until - now) / 1000)) : 0
+
+  useEffect(() => {
+    if (!resend) return
+    const timer = window.setInterval(() => {
+      const time = Date.now()
+      setNow(time)
+      if (time >= resend.until) window.clearInterval(timer)
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [resend])
 
   useEffect(() => {
     const dialog = dialogRef.current!
@@ -33,6 +48,7 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
     const email = formRef.current?.elements.namedItem('email')
     if (email instanceof HTMLInputElement) email.focus()
     return () => {
+      requestController.current?.abort()
       dialog.close()
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
     }
@@ -48,6 +64,12 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
       [field]: field in current ? validateRecovery(next)[field] : undefined,
       ...(field === 'email' ? { code: undefined } : {}),
     }))
+  }
+
+  function startCooldown(seconds: number) {
+    const time = Date.now()
+    setNow(time)
+    setResend({ email: values.email.trim().toLowerCase(), until: time + seconds * 1000 })
   }
 
   function checkField(field: keyof RecoveryValues) {
@@ -75,7 +97,7 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
   }
 
   async function requestCode() {
-    if (pendingRef.current || success) return
+    if (pendingRef.current || success || cooldown > 0) return
     const emailError = validateEmail(values.email)
     setErrors(current => ({ ...current, email: emailError }))
     setError('')
@@ -90,16 +112,29 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
     }
     pendingRef.current = true
     setPending('code')
+    const controller = new AbortController()
+    requestController.current = controller
     try {
-      await onRequestCode(values.email.trim().toLowerCase())
+      await onRequestCode(values.email.trim().toLowerCase(), controller.signal)
+      if (controller.signal.aborted) return
+      startCooldown(60)
       setValues(current => ({ ...current, code: '' }))
       setErrors(current => ({ ...current, code: undefined }))
       setMessage('Если email зарегистрирован, на него отправлен код восстановления.')
     } catch (cause) {
+      if (controller.signal.aborted) return
+      if (cause instanceof Error && 'status' in cause && cause.status === 429) {
+        const delay = 'retryAfterSeconds' in cause && typeof cause.retryAfterSeconds === 'number'
+          && Number.isFinite(cause.retryAfterSeconds) && cause.retryAfterSeconds > 0 ? cause.retryAfterSeconds : 60
+        startCooldown(delay)
+      }
       setError(cause instanceof Error && cause.message ? cause.message : 'Не удалось отправить код. Попробуйте позже.')
     } finally {
-      pendingRef.current = false
-      setPending(null)
+      if (requestController.current === controller) requestController.current = null
+      if (!controller.signal.aborted) {
+        pendingRef.current = false
+        setPending(null)
+      }
     }
   }
 
@@ -120,16 +155,23 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
     }
     pendingRef.current = true
     setPending('confirm')
+    const controller = new AbortController()
+    requestController.current = controller
     try {
-      await onConfirm({ ...values, email: values.email.trim().toLowerCase() })
+      await onConfirm({ ...values, email: values.email.trim().toLowerCase() }, controller.signal)
+      if (controller.signal.aborted) return
       setSuccess(true)
       setValues(emptyValues)
       setMessage('')
     } catch (cause) {
+      if (controller.signal.aborted) return
       setError(cause instanceof Error && cause.message ? cause.message : 'Не удалось восстановить пароль. Попробуйте позже.')
     } finally {
-      pendingRef.current = false
-      setPending(null)
+      if (requestController.current === controller) requestController.current = null
+      if (!controller.signal.aborted) {
+        pendingRef.current = false
+        setPending(null)
+      }
     }
   }
 
@@ -145,17 +187,18 @@ export function PasswordRecoveryDialog({ onClose, onRequestCode, onConfirm }: Pa
         <fieldset className={styles.fields} disabled={pending !== null || success}>
           <div>
             <AuthInput label="Введите почту" name="email" type="email" autoComplete="email" placeholder="name@example.com" maxLength={254} required value={values.email} error={errors.email} onChange={event => changeField('email', event.target.value)} onBlur={() => checkField('email')} />
-            <button className={styles.sendCode} type="button" onClick={requestCode}>{pending === 'code' ? 'Отправляем код…' : 'Отправить код'}</button>
+            <button className={styles.sendCode} type="button" onClick={requestCode} disabled={cooldown > 0}>{pending === 'code' ? 'Отправляем код…' : cooldown > 0 ? `Повторить через ${cooldown} с` : 'Отправить код'}</button>
           </div>
           <AuthInput label="Введите код" name="code" type="text" inputMode="numeric" autoComplete="one-time-code" placeholder="Введите код" maxLength={6} required hint="6 цифр из письма" value={values.code} error={errors.code} onChange={event => changeField('code', event.target.value)} onBlur={() => checkField('code')} />
           <AuthInput label="Введите новый пароль" name="newPassword" type="password" autoComplete="new-password" placeholder="Введите новый пароль" minLength={8} maxLength={128} required hint="8–128 символов" value={values.newPassword} error={errors.newPassword} onChange={event => changeField('newPassword', event.target.value)} onBlur={() => checkField('newPassword')} />
           <Button type="submit" className={styles.confirm}>{pending === 'confirm' ? 'Подтверждаем…' : 'Подтвердить'}</Button>
         </fieldset>
         {error && <p className={styles.error} role="alert">{error}</p>}
-        {message && <p className={styles.message} role="status">{message}</p>}
+        {message && !pending && <p className={styles.message} role="status">{message}</p>}
         {success && <p className={styles.success} role="status">Пароль восстановлен!</p>}
         {pending && <p className={styles.message} role="status">{pending === 'code' ? 'Отправляем код…' : 'Подтверждаем новый пароль…'}</p>}
       </form>
+      {success && <Button className={styles.returnButton} onClick={onClose}>Вернуться ко входу</Button>}
     </dialog>
   )
 }

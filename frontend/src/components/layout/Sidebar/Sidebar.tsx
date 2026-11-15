@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import logo from '../../../assets/logo.svg'
 import styles from './Sidebar.module.css'
+import { Button } from '../../ui/Button/Button'
 
 export interface SidebarItem {
   label: string
@@ -14,9 +15,10 @@ interface SidebarProps {
   items: readonly SidebarItem[]
   label: string
   user: string
+  onLogout?: () => void
 }
 
-export function Sidebar({ items, label, user }: SidebarProps) {
+export function Sidebar({ items, label, user, onLogout }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <NavLink to="/" className={styles.brand} aria-label="ЗаписьПро — главная"><img src={logo} alt="ЗаписьПро" width={214} height={31} /></NavLink>
@@ -39,6 +41,7 @@ export function Sidebar({ items, label, user }: SidebarProps) {
         </ul>
       </nav>
       <div className={styles.user}>● {user}</div>
+      {onLogout && <Button variant="secondary" className={styles.logout} onClick={onLogout}>Выйти</Button>}
     </aside>
   )
 }

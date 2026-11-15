@@ -52,3 +52,10 @@
   flex-shrink: 0;
   padding: 0 72px 0 62px;
 }
+
+.actions .logoutButton {
+  height: 50px;
+  margin-left: 16px;
+  padding: 0 20px;
+  font-size: 16px;
+}

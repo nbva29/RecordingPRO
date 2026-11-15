@@ -4,7 +4,8 @@ import {
   LayoutDashboard,
   List,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuthSession } from "../auth/authSession";
 import { Sidebar } from "../components/layout/Sidebar/Sidebar";
 import type { SidebarItem } from "../components/layout/Sidebar/Sidebar";
 import styles from "./Layout.module.css";
@@ -17,11 +18,17 @@ const items: readonly SidebarItem[] = [
 ];
 
 export function AdminLayout() {
+  const user = useAuthSession(state => state.user);
+  const navigate = useNavigate();
+  function logout() {
+    useAuthSession.getState().logout();
+    navigate("/admin/login", { replace: true });
+  }
   const { pathname } = useLocation();
   const title = items.find((item) => item.to === pathname)?.label;
   return (
     <div className={styles.cabinetLayout}>
-      <Sidebar items={items} label="Меню администратора" user="Анна Смирнова" />
+      <Sidebar items={items} label="Меню администратора" user={user?.name || user?.email || ""} onLogout={logout} />
       <div className={styles.cabinet}>
         <header className={styles.cabinetHeader}>
           <h2>{pathname === "/admin" ? "" : title}</h2>
@@ -29,6 +36,7 @@ export function AdminLayout() {
             ЛИЧНЫЙ КАБИНЕТ
           </Link>
         </header>
+        <Outlet />
       </div>
     </div>
   );

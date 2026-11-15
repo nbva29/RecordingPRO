@@ -1,4 +1,5 @@
 import type { RouteObject } from "react-router-dom";
+import { GuestOnly, RequireAuth } from "../components/auth/AuthGate";
 import { AdminLayout } from "../layouts/AdminLayout";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { ClientLayout } from "../layouts/ClientLayout";
@@ -28,30 +29,39 @@ export const routes: RouteObject[] = [
     ],
   },
   {
-    element: <AuthLayout />,
-    children: [
-      { path: "login", element: <LoginPage /> },
-      { path: "admin/login", element: <LoginPage audience="admin" /> },
-      { path: "register", element: <RegisterPage /> },
-    ],
+    element: <GuestOnly />,
+    children: [{
+      element: <AuthLayout />,
+      children: [
+        { path: "login", element: <LoginPage /> },
+        { path: "admin/login", element: <LoginPage audience="admin" /> },
+        { path: "register", element: <RegisterPage /> },
+      ],
+    }],
   },
   {
-    path: "client",
-    element: <ClientLayout />,
-    children: [
-      { index: true, element: <ClientOverviewPage /> },
-      { path: "bookings", element: <ClientBookingsPage /> },
-      { path: "profile", element: <ClientProfilePage /> },
-    ],
+    element: <RequireAuth role="client" />,
+    children: [{
+      path: "client",
+      element: <ClientLayout />,
+      children: [
+        { index: true, element: <ClientOverviewPage /> },
+        { path: "bookings", element: <ClientBookingsPage /> },
+        { path: "profile", element: <ClientProfilePage /> },
+      ],
+    }],
   },
   {
-    path: "admin",
-    element: <AdminLayout />,
-    children: [
-      { index: true, element: <AdminOverviewPage /> },
-      { path: "calendar", element: <AdminCalendarPage /> },
-      { path: "services", element: <AdminServicesPage /> },
-      { path: "statistics", element: <AdminStatisticsPage /> },
-    ],
+    element: <RequireAuth role="admin" />,
+    children: [{
+      path: "admin",
+      element: <AdminLayout />,
+      children: [
+        { index: true, element: <AdminOverviewPage /> },
+        { path: "calendar", element: <AdminCalendarPage /> },
+        { path: "services", element: <AdminServicesPage /> },
+        { path: "statistics", element: <AdminStatisticsPage /> },
+      ],
+    }],
   },
 ];
