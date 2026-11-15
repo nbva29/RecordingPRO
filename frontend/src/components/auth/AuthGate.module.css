@@ -1,0 +1,15 @@
+.status {
+  width: 680px;
+  margin: 80px auto;
+  padding: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-white);
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}

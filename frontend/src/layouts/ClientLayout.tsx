@@ -1,5 +1,6 @@
 import { CalendarDays, LayoutDashboard, Search, UserRound } from "lucide-react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { useAuthSession } from "../auth/authSession";
 import { Sidebar } from "../components/layout/Sidebar/Sidebar";
 import type { SidebarItem } from "../components/layout/Sidebar/Sidebar";
 import styles from "./Layout.module.css";
@@ -12,9 +13,15 @@ const items: readonly SidebarItem[] = [
 ];
 
 export function ClientLayout() {
+  const user = useAuthSession(state => state.user);
+  const navigate = useNavigate();
+  function logout() {
+    useAuthSession.getState().logout();
+    navigate("/login", { replace: true });
+  }
   return (
     <div className={styles.cabinetLayout}>
-      <Sidebar items={items} label="Меню клиента" user="Екатерина Иванова" />
+      <Sidebar items={items} label="Меню клиента" user={user?.name || user?.email || ""} onLogout={logout} />
 
       <div className={styles.cabinet}>
         <header className={styles.cabinetHeader}>

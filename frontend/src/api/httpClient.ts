@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { attachSessionToken, handleUnauthorized } from '../auth/httpSession';
 
 export class ApiError extends Error {
   readonly status?: number;
@@ -10,10 +11,12 @@ export class ApiError extends Error {
 }
 
 export const httpClient = axios.create({ baseURL: '/api', timeout: 15000 });
+httpClient.interceptors.request.use(attachSessionToken);
 httpClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     if (axios.isCancel(error)) return Promise.reject(error);
+    if (axios.isAxiosError(error)) handleUnauthorized(error);
     const status = axios.isAxiosError(error) ? error.response?.status : undefined;
     const message = status === 404
       ? 'Запрошенные данные не найдены.'
