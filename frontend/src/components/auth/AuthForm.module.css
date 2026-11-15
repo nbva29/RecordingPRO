@@ -44,6 +44,30 @@
   gap: 8px;
 }
 
+.fieldHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hint {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.fieldError {
+  margin: 0;
+  color: #d66666;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.termsError {
+  margin: -12px 0 16px;
+}
+
 .label {
   color: var(--color-text-secondary);
   font-size: 14px;
@@ -67,6 +91,10 @@
 .input::placeholder {
   color: var(--color-text-secondary);
   opacity: 1;
+}
+
+.input[aria-invalid='true'] {
+  border-color: #d66666;
 }
 
 .input:disabled {
@@ -211,6 +239,10 @@
 
 .registration .label {
   font-size: 12px;
+  line-height: 16px;
+}
+
+.registration .hint {
   line-height: 16px;
 }
 
