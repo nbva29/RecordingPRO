@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -182,14 +182,20 @@ def delete_category(
 def list_services(
     organization_id: int,
     db: Annotated[Session, Depends(get_db)],
+    available_for_online_booking: Annotated[bool | None, Query()] = None,
 ) -> list[ServiceRead]:
     get_organization(db, organization_id)
-    services = db.scalars(
+    query = (
         select(Service)
         .join(Service.category)
         .where(Category.organization_id == organization_id)
-        .order_by(Service.id)
-    ).all()
+    )
+    if available_for_online_booking is not None:
+        query = query.where(
+            Service.is_available_for_online_booking
+            == available_for_online_booking
+        )
+    services = db.scalars(query.order_by(Service.id)).all()
     return [ServiceRead.model_validate(service) for service in services]
 
 
@@ -238,6 +244,7 @@ def create_service(
         price=data.price,
         duration=data.duration,
         discount_percent=data.discount_percent,
+        is_available_for_online_booking=data.is_available_for_online_booking,
     )
     db.add(service)
     db.commit()

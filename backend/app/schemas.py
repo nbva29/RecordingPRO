@@ -160,6 +160,7 @@ class ServiceCreate(BaseModel):
     price: int = Field(ge=0, le=10_000_000)
     duration: int = Field(gt=0, le=1440)
     discount_percent: int = Field(default=0, ge=0, le=100)
+    is_available_for_online_booking: bool = True
 
 
 class ServiceUpdate(BaseModel):
@@ -170,8 +171,16 @@ class ServiceUpdate(BaseModel):
     price: int | None = Field(default=None, ge=0, le=10_000_000)
     duration: int | None = Field(default=None, gt=0, le=1440)
     discount_percent: int | None = Field(default=None, ge=0, le=100)
+    is_available_for_online_booking: bool | None = Field(default=None)
 
-    @field_validator("name", "price", "duration", "discount_percent", mode="before")
+    @field_validator(
+        "name",
+        "price",
+        "duration",
+        "discount_percent",
+        "is_available_for_online_booking",
+        mode="before",
+    )
     @classmethod
     def reject_null(cls, value: object) -> object:
         if value is None:
@@ -190,6 +199,7 @@ class ServiceRead(BaseModel):
     duration: int
     discount_percent: int
     final_price: int
+    is_available_for_online_booking: bool
 
 
 class ServiceOptionCreate(BaseModel):
