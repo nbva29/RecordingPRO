@@ -117,6 +117,9 @@ class Service(Base):
     price: Mapped[int]
     duration: Mapped[int]
     discount_percent: Mapped[int] = mapped_column(default=0, server_default="0")
+    is_available_for_online_booking: Mapped[bool] = mapped_column(
+        default=True, server_default="1"
+    )
 
     category: Mapped[Category] = relationship(back_populates="services")
     specialists: Mapped[list["Specialist"]] = relationship(

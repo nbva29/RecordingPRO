@@ -273,7 +273,8 @@ Email приводится к нижнему регистру. Новый пар
 - `POST /api/organizations/{id}/categories` — создать категорию;
 - `PATCH /api/categories/{id}` — переименовать категорию;
 - `DELETE /api/categories/{id}` — удалить категорию без услуг;
-- `GET /api/organizations/{id}/services` — услуги организации;
+- `GET /api/organizations/{id}/services` — услуги организации
+  (фильтр `available_for_online_booking=true|false`);
 - `GET /api/services/{id}` — получить услугу;
 - `POST /api/organizations/{id}/services` — добавить услугу;
 - `PATCH /api/services/{id}` — изменить услугу и цену;
@@ -297,6 +298,10 @@ Email приводится к нижнему регистру. Новый пар
 поля, отрицательная цена, нулевая длительность и `null` в обязательных полях
 отклоняются с `422`. В `PATCH` явный `null` очищает `description`; `price >= 0`
 дополнительно проверяется ограничением в БД.
+
+`is_available_for_online_booking` — признак доступности услуги для онлайн-записи
+(по умолчанию `true`). Менять флаг, организацию и услуги может только
+администратор: без токена API отвечает `401`, клиенту — `403`.
 
 ### Специалисты
 
@@ -396,7 +401,8 @@ Email приводится к нижнему регистру. Новый пар
             "price": 2000,
             "duration": 60,
             "discount_percent": 10,
-            "final_price": 1800
+            "final_price": 1800,
+            "is_available_for_online_booking": true
           }
         ]
       }
