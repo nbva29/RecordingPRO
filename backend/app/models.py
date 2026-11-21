@@ -102,6 +102,10 @@ class Service(Base):
     __tablename__ = "services"
     __table_args__ = (
         CheckConstraint("price >= 0", name="ck_services_price_non_negative"),
+        CheckConstraint(
+            "discount_percent >= 0 AND discount_percent <= 100",
+            name="ck_services_discount_percent_range",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -112,6 +116,10 @@ class Service(Base):
     description: Mapped[str | None] = mapped_column(Text)
     price: Mapped[int]
     duration: Mapped[int]
+    discount_percent: Mapped[int] = mapped_column(default=0, server_default="0")
+    is_available_for_online_booking: Mapped[bool] = mapped_column(
+        default=True, server_default="1"
+    )
 
     category: Mapped[Category] = relationship(back_populates="services")
     specialists: Mapped[list["Specialist"]] = relationship(
@@ -119,6 +127,33 @@ class Service(Base):
         back_populates="services",
         order_by="Specialist.name",
     )
+    options: Mapped[list["ServiceOption"]] = relationship(
+        back_populates="service",
+        cascade="all, delete-orphan",
+        order_by="ServiceOption.id",
+    )
+
+    @property
+    def final_price(self) -> int:
+        return self.price - self.price * self.discount_percent // 100
+
+
+class ServiceOption(Base):
+    __tablename__ = "service_options"
+    __table_args__ = (
+        CheckConstraint(
+            "price >= 0", name="ck_service_options_price_non_negative"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    service_id: Mapped[int] = mapped_column(
+        ForeignKey("services.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(150))
+    price: Mapped[int]
+
+    service: Mapped[Service] = relationship(back_populates="options")
 
 
 class Specialist(Base):

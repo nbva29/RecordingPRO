@@ -8,6 +8,7 @@ from app.models import (  # Register model tables in Base.metadata.
     Organization,
     Role,
     Service,
+    ServiceOption,
     Specialist,
     User,
 )
