@@ -237,6 +237,7 @@ def create_service(
         description=data.description,
         price=data.price,
         duration=data.duration,
+        discount_percent=data.discount_percent,
     )
     db.add(service)
     db.commit()

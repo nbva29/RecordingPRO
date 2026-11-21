@@ -159,6 +159,7 @@ class ServiceCreate(BaseModel):
     description: str | None = Field(default=None, max_length=2000)
     price: int = Field(ge=0, le=10_000_000)
     duration: int = Field(gt=0, le=1440)
+    discount_percent: int = Field(default=0, ge=0, le=100)
 
 
 class ServiceUpdate(BaseModel):
@@ -168,8 +169,9 @@ class ServiceUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=2000)
     price: int | None = Field(default=None, ge=0, le=10_000_000)
     duration: int | None = Field(default=None, gt=0, le=1440)
+    discount_percent: int | None = Field(default=None, ge=0, le=100)
 
-    @field_validator("name", "price", "duration", mode="before")
+    @field_validator("name", "price", "duration", "discount_percent", mode="before")
     @classmethod
     def reject_null(cls, value: object) -> object:
         if value is None:
@@ -186,6 +188,55 @@ class ServiceRead(BaseModel):
     description: str | None
     price: int
     duration: int
+    discount_percent: int
+    final_price: int
+
+
+class ServiceOptionCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=150)
+    price: int = Field(ge=0, le=10_000_000)
+
+
+class ServiceOptionUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str | None = Field(default=None, min_length=1, max_length=150)
+    price: int | None = Field(default=None, ge=0, le=10_000_000)
+
+    @field_validator("name", "price", mode="before")
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("Поле обязательно и не может быть null")
+        return value
+
+
+class ServiceOptionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    service_id: int
+    name: str
+    price: int
+
+
+class PriceCalculationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    option_ids: list[Annotated[int, Field(gt=0)]] = Field(default_factory=list)
+
+
+class PriceCalculationRead(BaseModel):
+    service_id: int
+    base_price: int
+    discount_percent: int
+    discount_amount: int
+    final_price: int
+    options: list[ServiceOptionRead]
+    options_total: int
+    total_price: int
 
 
 class SpecialistCreate(BaseModel):
