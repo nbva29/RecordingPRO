@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
 
@@ -186,6 +186,44 @@ class ServiceRead(BaseModel):
     description: str | None
     price: int
     duration: int
+
+
+class SpecialistCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=150)
+    description: str | None = Field(default=None, max_length=2000)
+    service_ids: list[Annotated[int, Field(gt=0)]] = Field(default_factory=list)
+
+
+class SpecialistUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str | None = Field(default=None, min_length=1, max_length=150)
+    description: str | None = Field(default=None, max_length=2000)
+    service_ids: list[Annotated[int, Field(gt=0)]] | None = Field(default=None)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def reject_null_name(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("Поле обязательно и не может быть null")
+        return value
+
+    @field_validator("service_ids", mode="before")
+    @classmethod
+    def reject_null_service_ids(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("Передайте [] чтобы очистить список услуг")
+        return value
+
+
+class SpecialistRead(BaseModel):
+    id: int
+    organization_id: int
+    name: str
+    description: str | None
+    service_ids: list[int]
 
 
 class CategoryWithServices(CategoryRead):
