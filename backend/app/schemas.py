@@ -1,7 +1,16 @@
+from datetime import time
 from uuid import UUID
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 
 
 class UserCreate(BaseModel):
@@ -285,6 +294,57 @@ class SpecialistRead(BaseModel):
     name: str
     description: str | None
     service_ids: list[int]
+
+
+class WorkInterval(BaseModel):
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+
+    day_of_week: int = Field(
+        ge=0, le=6, description="0 — понедельник, 6 — воскресенье"
+    )
+    start_time: time
+    end_time: time
+
+    @field_validator("start_time", "end_time")
+    @classmethod
+    def validate_time(cls, value: time) -> time:
+        if value.tzinfo is not None or value.second or value.microsecond:
+            raise ValueError(
+                "Укажите местное время с точностью до минуты, без часового пояса"
+            )
+        return value
+
+    @model_validator(mode="after")
+    def validate_time_range(self) -> Self:
+        if self.end_time <= self.start_time:
+            raise ValueError(
+                "Время окончания должно быть позже времени начала в том же дне"
+            )
+        return self
+
+
+class ScheduleReplace(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    intervals: list[WorkInterval]
+
+    @model_validator(mode="after")
+    def validate_overlaps(self) -> Self:
+        intervals = sorted(
+            self.intervals, key=lambda item: (item.day_of_week, item.start_time)
+        )
+        for previous, current in zip(intervals, intervals[1:]):
+            if (
+                previous.day_of_week == current.day_of_week
+                and current.start_time < previous.end_time
+            ):
+                raise ValueError("Рабочие интервалы одного дня не должны пересекаться")
+        return self
+
+
+class ScheduleRead(BaseModel):
+    specialist_id: int
+    intervals: list[WorkInterval]
 
 
 class CategoryWithServices(CategoryRead):

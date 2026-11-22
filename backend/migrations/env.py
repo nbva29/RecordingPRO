@@ -4,6 +4,7 @@ from alembic import context
 
 from app.database import Base, database_url, engine
 from app.models import (  # Register model tables in Base.metadata.
+    Appointment,
     Category,
     Organization,
     Role,
@@ -11,6 +12,7 @@ from app.models import (  # Register model tables in Base.metadata.
     ServiceOption,
     Specialist,
     User,
+    WorkSchedule,
 )
 
 config = context.config
