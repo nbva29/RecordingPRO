@@ -1,14 +1,17 @@
-from datetime import datetime
+from datetime import date, datetime, time, timezone
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
     CheckConstraint,
     Column,
+    Date,
     DateTime,
     ForeignKey,
+    Index,
     String,
     Table,
     Text,
+    Time,
     UniqueConstraint,
     Uuid,
 )
@@ -172,3 +175,73 @@ class Specialist(Base):
         back_populates="specialists",
         order_by="Service.id",
     )
+    work_intervals: Mapped[list["WorkSchedule"]] = relationship(
+        back_populates="specialist",
+        cascade="all, delete-orphan",
+        order_by="(WorkSchedule.day_of_week, WorkSchedule.start_time)",
+    )
+
+
+class WorkSchedule(Base):
+    __tablename__ = "work_schedules"
+    __table_args__ = (
+        CheckConstraint(
+            "day_of_week >= 0 AND day_of_week <= 6",
+            name="ck_work_schedules_day_of_week",
+        ),
+        CheckConstraint(
+            "start_time >= '00:00:00' AND end_time < '24:00:00' "
+            "AND end_time > start_time",
+            name="ck_work_schedules_time_range",
+        ),
+        Index("ix_work_schedules_specialist_day", "specialist_id", "day_of_week"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    specialist_id: Mapped[int] = mapped_column(
+        ForeignKey("specialists.id", ondelete="CASCADE")
+    )
+    day_of_week: Mapped[int]
+    start_time: Mapped[time] = mapped_column(Time)
+    end_time: Mapped[time] = mapped_column(Time)
+
+    specialist: Mapped[Specialist] = relationship(back_populates="work_intervals")
+
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+    __table_args__ = (
+        CheckConstraint(
+            "start_time >= '00:00:00' AND end_time < '24:00:00' "
+            "AND end_time > start_time",
+            name="ck_appointments_time_range",
+        ),
+        CheckConstraint(
+            "status IN ('created', 'confirmed', 'completed', 'cancelled')",
+            name="ck_appointments_status",
+        ),
+        Index("ix_appointments_specialist_date", "specialist_id", "appointment_date"),
+        Index("ix_appointments_client_date", "client_id", "appointment_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    client_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    specialist_id: Mapped[int] = mapped_column(
+        ForeignKey("specialists.id", ondelete="RESTRICT")
+    )
+    service_id: Mapped[int] = mapped_column(
+        ForeignKey("services.id", ondelete="RESTRICT"), index=True
+    )
+    appointment_date: Mapped[date] = mapped_column(Date)
+    start_time: Mapped[time] = mapped_column(Time)
+    end_time: Mapped[time] = mapped_column(Time)
+    status: Mapped[str] = mapped_column(
+        String(20), default="created", server_default="created"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
+
+    client: Mapped[User] = relationship()
+    specialist: Mapped[Specialist] = relationship()
+    service: Mapped[Service] = relationship()
