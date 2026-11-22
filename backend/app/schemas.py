@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import date, time
 from uuid import UUID
 from typing import Annotated, Literal, Self
 
@@ -345,6 +345,18 @@ class ScheduleReplace(BaseModel):
 class ScheduleRead(BaseModel):
     specialist_id: int
     intervals: list[WorkInterval]
+
+
+class AvailableSlot(BaseModel):
+    start_time: time
+    end_time: time
+
+
+class AvailableSlotsRead(BaseModel):
+    specialist_id: int
+    service_id: int
+    date: date
+    slots: list[AvailableSlot]
 
 
 class CategoryWithServices(CategoryRead):
