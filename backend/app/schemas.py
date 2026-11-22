@@ -377,6 +377,18 @@ class AppointmentCreate(BaseModel):
         return value
 
 
+class AppointmentReschedule(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    appointment_date: date
+    start_time: time
+
+    @field_validator("start_time")
+    @classmethod
+    def validate_start_time(cls, value: time) -> time:
+        return AppointmentCreate.validate_start_time(value)
+
+
 class AppointmentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
