@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.auth import get_current_admin
@@ -15,12 +16,17 @@ from app.services import get_service
 router = APIRouter(prefix="/api", tags=["Специалисты"])
 
 
-def get_specialist(db: Session, specialist_id: int) -> Specialist:
-    specialist = db.scalar(
+def get_specialist(
+    db: Session, specialist_id: int, *, for_update: bool = False
+) -> Specialist:
+    query = (
         select(Specialist)
         .where(Specialist.id == specialist_id)
         .options(selectinload(Specialist.services))
     )
+    if for_update:
+        query = query.with_for_update()
+    specialist = db.scalar(query)
     if specialist is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -167,6 +173,7 @@ def update_specialist(
         401: {"description": "Требуется действительный Bearer-токен"},
         403: {"description": "Требуются права администратора"},
         404: {"description": "Специалист не найден"},
+        409: {"description": "У специалиста существуют записи"},
     },
 )
 def delete_specialist(
@@ -174,9 +181,16 @@ def delete_specialist(
     db: Annotated[Session, Depends(get_db)],
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> None:
-    specialist = get_specialist(db, specialist_id)
+    specialist = get_specialist(db, specialist_id, for_update=True)
     db.delete(specialist)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Нельзя удалить специалиста, для которого существуют записи",
+        ) from None
 
 
 @router.get(

@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time, timezone
 from uuid import UUID
 from typing import Annotated, Literal, Self
 
@@ -357,6 +357,43 @@ class AvailableSlotsRead(BaseModel):
     service_id: int
     date: date
     slots: list[AvailableSlot]
+
+
+class AppointmentCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    specialist_id: int = Field(gt=0)
+    service_id: int = Field(gt=0)
+    appointment_date: date
+    start_time: time
+
+    @field_validator("start_time")
+    @classmethod
+    def validate_start_time(cls, value: time) -> time:
+        if value.tzinfo is not None or value.second or value.microsecond:
+            raise ValueError(
+                "Укажите местное время с точностью до минуты, без часового пояса"
+            )
+        return value
+
+
+class AppointmentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    client_id: UUID
+    specialist_id: int
+    service_id: int
+    appointment_date: date
+    start_time: time
+    end_time: time
+    status: Literal["created", "confirmed", "completed", "cancelled"]
+    created_at: datetime
+
+    @field_validator("created_at")
+    @classmethod
+    def creation_time_utc(cls, value: datetime) -> datetime:
+        return value.replace(tzinfo=timezone.utc)
 
 
 class CategoryWithServices(CategoryRead):
