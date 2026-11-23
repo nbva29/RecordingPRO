@@ -10,6 +10,7 @@ export function safeReturnTo(role: AuthRole, value: unknown): string {
   try {
     const url = new URL(value, 'https://recordingpro.invalid')
     if (url.origin !== 'https://recordingpro.invalid') return home
+    if (/^\/booking\/[1-9]\d*$/.test(url.pathname)) return url.pathname + url.search + url.hash
     if ((url.pathname === home || url.pathname.startsWith(home + '/')) && url.pathname !== '/admin/login') {
       return url.pathname + url.search + url.hash
     }
