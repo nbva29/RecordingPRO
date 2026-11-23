@@ -32,8 +32,11 @@ def get_category(db: Session, category_id: int) -> Category:
     return category
 
 
-def get_service(db: Session, service_id: int) -> Service:
-    service = db.get(Service, service_id)
+def get_service(db: Session, service_id: int, *, for_update: bool = False) -> Service:
+    query = select(Service).where(Service.id == service_id)
+    if for_update:
+        query = query.with_for_update()
+    service = db.scalar(query)
     if service is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -285,6 +288,7 @@ def update_service(
         401: {"description": "Требуется действительный Bearer-токен"},
         403: {"description": "Требуются права администратора"},
         404: {"description": "Услуга не найдена"},
+        409: {"description": "Услуга используется в записях"},
     },
 )
 def delete_service(
@@ -292,6 +296,13 @@ def delete_service(
     db: Annotated[Session, Depends(get_db)],
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> None:
-    service = get_service(db, service_id)
+    service = get_service(db, service_id, for_update=True)
     db.delete(service)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Нельзя удалить услугу, для которой существуют записи",
+        ) from None

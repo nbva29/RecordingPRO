@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.auth import router as auth_router
+from app.bookings import router as bookings_router
 from app.organizations import router as organizations_router
 from app.pricing import router as pricing_router
 from app.scheduling import router as scheduling_router
@@ -17,6 +18,7 @@ app.include_router(services_router)
 app.include_router(specialists_router)
 app.include_router(pricing_router)
 app.include_router(scheduling_router)
+app.include_router(bookings_router)
 
 
 @app.exception_handler(RequestValidationError)
