@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useAuthSession } from "../auth/authSession";
 import { Sidebar } from "../components/layout/Sidebar/Sidebar";
 import type { SidebarItem } from "../components/layout/Sidebar/Sidebar";
+import { ClientProvider } from "../pages/client/ClientContext";
 import styles from "./Layout.module.css";
 
 const items: readonly SidebarItem[] = [
@@ -13,15 +14,20 @@ const items: readonly SidebarItem[] = [
 ];
 
 export function ClientLayout() {
-  const user = useAuthSession(state => state.user);
+  const user = useAuthSession((state) => state.user);
   const navigate = useNavigate();
   function logout() {
     useAuthSession.getState().logout();
     navigate("/login", { replace: true });
   }
   return (
-    <div className={styles.cabinetLayout}>
-      <Sidebar items={items} label="Меню клиента" user={user?.name || user?.email || ""} onLogout={logout} />
+    <div id="client-cabinet" className={styles.cabinetLayout}>
+      <Sidebar
+        items={items}
+        label="Меню клиента"
+        user={user?.name || user?.email || ""}
+        onLogout={logout}
+      />
 
       <div className={styles.cabinet}>
         <header className={styles.cabinetHeader}>
@@ -33,7 +39,9 @@ export function ClientLayout() {
           </div>
         </header>
 
-        <Outlet />
+        <ClientProvider key={user?.id}>
+          <Outlet />
+        </ClientProvider>
       </div>
     </div>
   );

@@ -1,0 +1,693 @@
+.page {
+  max-width: 1500px;
+  padding: 42px 60px 80px;
+  margin: 0 auto;
+  min-width: 0;
+}
+.page h1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.2;
+}
+.page h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.page h3 {
+  margin: 8px 0 0;
+  font-size: 20px;
+}
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-uppercase);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.subtitle,
+.muted {
+  color: var(--color-text-secondary);
+}
+.subtitle {
+  margin: 8px 0 0;
+}
+.demo {
+  display: inline-block;
+  margin: 24px 0;
+  padding: 9px 14px;
+  border-radius: 8px;
+  color: var(--color-uppercase);
+  background: var(--color-green-active);
+  font-size: 13px;
+}
+.success {
+  padding: 14px 18px;
+  background: var(--color-green-active);
+  color: var(--color-uppercase);
+  border-radius: 10px;
+}
+.overviewGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+.section,
+.shortcuts,
+.bookingCard,
+.empty {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+.section,
+.shortcuts {
+  padding: 28px;
+  min-width: 0;
+}
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.sectionHeader p {
+  margin: 5px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.sectionHeader > svg {
+  color: var(--color-primary);
+}
+.section .bookingCard {
+  background: var(--color-card);
+}
+.list {
+  display: grid;
+  gap: 14px;
+}
+.lowerSection {
+  margin: 34px 0;
+}
+.bookingCard {
+  padding: 22px;
+  min-width: 0;
+}
+.cardHeader,
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+.org,
+.meta {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.org,
+.meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 20px 0;
+}
+.badge {
+  flex: 0 0 auto;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--color-card);
+  color: var(--color-text-secondary);
+}
+.badge.upcoming {
+  color: var(--color-uppercase);
+  background: var(--color-green-active);
+}
+.badge.cancelled {
+  background: #fff1f0;
+  color: #b04c4c;
+}
+.cardFooter {
+  border-top: 1px solid var(--color-border);
+  align-items: center;
+  padding-top: 16px;
+}
+.cardActions,
+.profileActions,
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cardActions button,
+.profileActions button,
+.dialogActions button {
+  font-size: 14px;
+  height: 40px;
+}
+.shortcuts h2 {
+  margin-bottom: 12px;
+}
+.shortcuts a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+}
+.shortcuts a:last-child {
+  border: 0;
+}
+.shortcuts a > svg:first-child {
+  color: var(--color-primary);
+  flex: 0 0 auto;
+}
+.shortcuts a > svg:last-child {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+}
+.shortcuts small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-secondary);
+}
+.inlineLink,
+.textButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: var(--color-uppercase);
+  font-weight: 700;
+  text-decoration: none;
+}
+.textButton {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+.primaryLink {
+  display: inline-block;
+  padding: 11px 18px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.empty {
+  padding: 28px;
+  color: var(--color-text-secondary);
+}
+.empty p {
+  margin-top: 0;
+}
+.count {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--color-card-blue);
+  font-weight: 700;
+}
+.profile {
+  max-width: 760px;
+}
+.profile label {
+  display: grid;
+  gap: 7px;
+  margin-top: 20px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.profile input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  color: var(--color-text-primary);
+  background: var(--color-white);
+}
+.profile input[readonly] {
+  background: var(--color-card);
+}
+.profile label small {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+.profile label span {
+  color: #b04c4c;
+  font-weight: 400;
+}
+.profileActions {
+  margin-top: 28px;
+}
+.dialog {
+  width: min(620px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  border: 0;
+  border-radius: 14px;
+  padding: 28px;
+  color: var(--color-text-primary);
+  overflow: auto;
+}
+.dialog::backdrop {
+  background: rgb(23 37 59 / 55%);
+}
+.dialogHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 15px;
+}
+.dialogHeader h2 {
+  font-size: 22px;
+  margin: 0;
+}
+.close {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.dialogActions {
+  justify-content: flex-end;
+  margin-top: 25px;
+}
+.details {
+  margin: 24px 0;
+}
+.details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.details dt {
+  color: var(--color-text-secondary);
+}
+.details dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+}
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.slots button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  background: white;
+  color: var(--color-text-primary);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.slots .slotActive {
+  border-color: var(--color-primary);
+  background: var(--color-green-active);
+  color: var(--color-uppercase);
+}
+
+.page {
+  padding: 22px 28px 70px;
+  max-width: 1500px;
+}
+.page h1 {
+  font-size: 30px;
+}
+.page h2 {
+  font-size: 20px;
+}
+.page h3 {
+  font-size: 16px;
+}
+.subtitle {
+  margin-top: 4px;
+  font-size: 14px;
+}
+.pageHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+.headingActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.primaryLink,
+.outlineLink {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 20px;
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.outlineLink {
+  color: var(--color-text-primary);
+  background: white;
+  border-color: var(--color-border);
+}
+.demo {
+  margin: 15px 0;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin: 14px 0 24px;
+}
+.stats article,
+.dashboardSection,
+.profileBanner {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.stats article {
+  display: grid;
+  gap: 6px;
+  padding: 16px 20px;
+  min-width: 0;
+}
+.stats span,
+.stats small,
+.stats a {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.stats strong {
+  font-size: 28px;
+  line-height: 1.1;
+}
+.stats small,
+.stats a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(230px, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+.dashboardSection {
+  min-width: 0;
+  padding: 22px;
+}
+.dashboardList {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+.dashboardBooking {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--color-card);
+  border-radius: 9px;
+  padding: 14px 18px;
+}
+.dashboardBooking h3 {
+  margin: 0;
+}
+.dashboardBooking p {
+  margin: 5px 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.dashboardBooking strong,
+.dashboardBooking a {
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.dashboardBooking a {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.allBookingsLink {
+  color: var(--color-primary);
+}
+.profileIdentity,
+.profileBanner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.profileIdentity {
+  margin-top: 20px;
+}
+.profileIdentity small,
+.profileBanner span:not(.profileAvatar) {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.profileIdentity strong {
+  font-size: 14px;
+}
+.profileAvatar {
+  flex: 0 0 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-green-active);
+  color: var(--color-primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+.profileInfo {
+  margin: 22px 0;
+}
+.profileInfo span {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.profileInfo p {
+  margin: 4px 0 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.dashboardSection > .outlineLink {
+  width: 100%;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: white;
+}
+.filters button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 145px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+}
+.filters .filterActive {
+  color: var(--color-text-primary);
+  background: var(--color-green-active);
+  font-weight: 700;
+}
+.filters button span {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-card);
+  font-size: 11px;
+}
+.filters .filterActive span {
+  background: #c5f1e1;
+}
+.bookingsPage .lowerSection {
+  margin: 22px 0 30px;
+}
+.sectionHeader small {
+  color: var(--color-text-secondary);
+}
+.list {
+  gap: 14px;
+}
+.bookingCard {
+  display: grid;
+  grid-template-columns:
+    80px minmax(150px, 1.6fr) minmax(140px, 0.9fr)
+    auto minmax(170px, 1fr);
+  gap: 20px;
+  align-items: center;
+  padding: 12px;
+}
+.cardPicture {
+  width: 80px;
+  height: 76px;
+  background: var(--color-green-active);
+  border-radius: 8px;
+}
+.cardInfo {
+  min-width: 0;
+}
+.cardInfo h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+.cardInfo .org {
+  display: flex;
+  margin-top: 3px;
+  font-size: 12px;
+}
+.cardDate {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.cardDate span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.badge {
+  font-size: 11px;
+}
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.cardActions button {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.cardActions button:first-child {
+  flex-basis: 100%;
+}
+.cardActions button.cancelAction {
+  color: #dd4747;
+  background: #fff1f0;
+  border-color: #fff1f0;
+}
+.profileBanner {
+  padding: 16px 20px;
+  margin-top: 30px;
+  margin-bottom: 14px;
+}
+.profileBanner h2 {
+  font-size: 20px;
+}
+.profileGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 1fr);
+  gap: 16px;
+}
+.profileGrid .section {
+  padding: 22px;
+}
+.profile {
+  max-width: none;
+}
+.profileFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.profile label {
+  margin-top: 14px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+}
+.profile input {
+  height: 40px;
+  font-size: 13px;
+}
+.securityText {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.profile input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.bookingsPage .filters {
+  margin-top: 30px;
+}
+.bookingCard {
+  grid-template-columns:
+    100px minmax(150px, 1.6fr) minmax(140px, 0.9fr)
+    auto minmax(200px, 1fr);
+  gap: 20px;
+  padding: 14px 16px;
+}
+.cardPicture {
+  width: 100px;
+  height: 88px;
+  background: var(--color-green-active);
+}
+.cardDate {
+  align-self: stretch;
+  align-content: center;
+  border-right: 1px solid var(--color-border);
+  padding-right: 16px;
+}
+.cardDate small {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  font-size: 12px;
+}
+.cardActions button {
+  gap: 5px;
+}
+.cardActions button:first-child {
+  grid-column: 1 / -1;
+}
+.cardActions {
+  width: min(328px, 100%);
+  justify-self: end;
+}
+.badge.upcoming {
+  color: var(--color-primary);
+}
