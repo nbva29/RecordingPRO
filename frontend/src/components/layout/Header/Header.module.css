@@ -43,9 +43,7 @@
 }
 
 .link:hover {
-  color: var(--color-text-primary);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  color: var(--color-primary);
 }
 
 .authHeader {
