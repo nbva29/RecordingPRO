@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+﻿import { useParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button/Button";
 import { useOrganization } from "../../hooks/useCatalog";
 import { ApiError } from "../../api/httpClient";
@@ -44,10 +44,10 @@ export function OrganizationPage() {
           <h2>{organization.address}</h2>
           <p>{organization.city}</p>
 
-          <Button className={styles.bookingButton}>Записаться онлайн →</Button>
+          <Button className={styles.bookingButton} onClick={() => document.getElementById("organization-services")?.scrollIntoView({ behavior: "smooth" })}>Записаться онлайн →</Button>
         </div>
       </section>
-      <section className={styles.servicesSection}>
+      <section id="organization-services" className={styles.servicesSection}>
         <h2>Услуги и цены</h2>
 
         <div className={styles.servicesList}>
@@ -67,3 +67,4 @@ export function OrganizationPage() {
     </main>
   );
 }
+
