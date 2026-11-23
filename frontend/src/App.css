@@ -9,3 +9,10 @@
   line-height: 1.25;
 }
 
+
+/* The booking flow is responsive without changing the layout of other pages. */
+@media (max-width: 1023px) {
+  body:has(#booking-page) { min-width: 0; }
+  body:has(#booking-page) .app-main { padding: 28px 20px; }
+  body:has(#booking-page) .app-main h1 { font-size: 32px; }
+}

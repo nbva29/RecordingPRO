@@ -59,3 +59,16 @@
   padding: 0 20px;
   font-size: 16px;
 }
+
+@media (max-width: 1023px) {
+  :global(body:has(#booking-page)) .header { height: auto; min-height: 72px; padding: 14px 20px; gap: 16px; flex-wrap: wrap; }
+  :global(body:has(#booking-page)) .logo { width: 145px; }
+  :global(body:has(#booking-page)) .brand { flex: 1 1 auto; }
+  :global(body:has(#booking-page)) .actions { flex: 0 1 auto; }
+  :global(body:has(#booking-page)) .actions .loginButton { width: auto; height: 40px; padding: 0 12px; font-size: 14px; }
+  :global(body:has(#booking-page)) .actions .logoutButton { height: 40px; padding: 0 10px; margin-left: 6px; font-size: 14px; }
+  :global(body:has(#booking-page)) .header nav { order: 3; flex-basis: 100%; }
+}
+
+:global(body:has(#booking-page)) .header { border-radius: 0 0 14px 14px; }
+:global(body:has(#booking-page)) .header nav { display: none; }
