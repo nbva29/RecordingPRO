@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timezone
+from enum import IntEnum
 from uuid import UUID
 from typing import Annotated, Literal, Self
 
@@ -453,6 +454,21 @@ class AdminAppointmentRead(AppointmentDetailsRead):
     client: AppointmentClientRead
 
 
+class StatisticsPeriod(IntEnum):
+    days_7 = 7
+    days_30 = 30
+    days_90 = 90
+
+
+class StatisticsQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    period_days: StatisticsPeriod = Field(
+        default=StatisticsPeriod.days_30,
+        description="Последние 7, 30 или 90 календарных дней, включая сегодня",
+    )
+
+
 class AppointmentStatisticsCounts(BaseModel):
     total: int
     created: int
@@ -479,11 +495,27 @@ class PopularServiceRead(BaseModel):
     appointments_count: int
 
 
+class PreviousStatisticsPeriod(BaseModel):
+    date_from: date
+    date_to: date
+    total: int
+
+
+class OrganizationStatisticsPercentages(BaseModel):
+    total_change: float | None = Field(
+        description="Рост к предыдущему периоду; null при росте с нулевой базы"
+    )
+    completed: float = Field(ge=0, le=100)
+    cancelled: float = Field(ge=0, le=100)
+
+
 class OrganizationStatisticsRead(ClientStatisticsRead):
     organization_id: int
     unique_clients: int
     daily: list[DailyAppointmentStatistics]
     popular_services: list[PopularServiceRead]
+    previous_period: PreviousStatisticsPeriod
+    percentages: OrganizationStatisticsPercentages
 
 
 class CategoryWithServices(CategoryRead):

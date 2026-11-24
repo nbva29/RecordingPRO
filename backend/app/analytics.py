@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -14,19 +14,26 @@ from app.schemas import (
     ClientStatisticsRead,
     DailyAppointmentStatistics,
     OrganizationStatisticsRead,
+    OrganizationStatisticsPercentages,
     PopularServiceRead,
+    PreviousStatisticsPeriod,
+    StatisticsPeriod,
+    StatisticsQuery,
 )
 
 
 router = APIRouter(prefix="/api", tags=["Статистика"])
 
 
-def validate_period(date_from: date, date_to: date) -> None:
-    if date_from > date_to:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Дата начала периода должна быть не позже даты окончания",
-        )
+def resolve_period(
+    period_days: StatisticsPeriod,
+    today: date,
+) -> tuple[date, date]:
+    return today - timedelta(days=int(period_days) - 1), today
+
+
+def percentage(part: int, total: int) -> float:
+    return round(part * 100 / total, 1) if total else 0.0
 
 
 def count_columns(now: datetime):
@@ -57,20 +64,22 @@ def count_columns(now: datetime):
     summary="Моя статистика записей за период",
     description=(
         "Только записи текущего пользователя по дате приёма, обе границы периода "
-        "включены. Статусы считаются по значениям в БД. upcoming — активные записи "
+        "включены. period_days — последние 7, 30 или 90 календарных дней, включая "
+        "сегодня по местному времени backend; по умолчанию 30. "
+        "Статусы считаются по значениям в БД. upcoming — активные записи "
         "с началом в будущем, history — все остальные, как в списке своих записей. "
         "При пустом периоде все счётчики равны нулю."
     ),
     responses={401: {"description": "Требуется действительный Bearer-токен"}},
 )
 def client_statistics(
-    date_from: date,
-    date_to: date,
+    period: Annotated[StatisticsQuery, Query()],
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ClientStatisticsRead:
-    validate_period(date_from, date_to)
-    query = select(*count_columns(datetime.now())).where(
+    now = datetime.now()
+    date_from, date_to = resolve_period(period.period_days, now.date())
+    query = select(*count_columns(now)).where(
         Appointment.client_id == current_user.id,
         Appointment.appointment_date >= date_from,
         Appointment.appointment_date <= date_to,
@@ -89,11 +98,17 @@ def client_statistics(
     summary="Статистика организации за период",
     description=(
         "Доступно администратору. Период задаётся по дате приёма, обе границы включены. "
+        "period_days — последние 7, 30 или 90 календарных дней, включая сегодня; "
+        "по умолчанию 30. "
         "counts включает все статусы; upcoming и history определяются по местному "
         "времени backend, как в списке записей. daily содержит только дни с записями. "
         "unique_clients и топ-10 popular_services не учитывают отменённые записи. "
         "Рейтинг упорядочен по числу записей, при равенстве — по ID услуги. "
-        "Статус completed не присваивается автоматически по прошедшей дате."
+        "Статус completed не присваивается автоматически по прошедшей дате. "
+        "percentages содержит доли completed и cancelled от total и изменение total "
+        "к предыдущему периоду такой же длины, округлённые до одного знака. "
+        "Если прошлый total равен нулю, рост с нуля обозначается null; "
+        "если оба total равны нулю, изменение равно 0."
     ),
     responses={
         401: {"description": "Требуется действительный Bearer-токен"},
@@ -103,14 +118,14 @@ def client_statistics(
 )
 def organization_statistics(
     organization_id: int,
-    date_from: date,
-    date_to: date,
+    period: Annotated[StatisticsQuery, Query()],
     db: Annotated[Session, Depends(get_db)],
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> OrganizationStatisticsRead:
-    validate_period(date_from, date_to)
+    now = datetime.now()
+    date_from, date_to = resolve_period(period.period_days, now.date())
     get_organization(db, organization_id)
-    columns = count_columns(datetime.now())
+    columns = count_columns(now)
     query = (
         select(*columns)
         .select_from(Appointment)
@@ -128,6 +143,22 @@ def organization_statistics(
             )).label("unique_clients")
         )
     ).mappings().one()
+    previous_to = date_from - timedelta(days=1)
+    previous_from = date_from - timedelta(days=int(period.period_days))
+    previous_total = db.scalar(
+        select(func.count())
+        .select_from(Appointment)
+        .join(Appointment.specialist)
+        .where(
+            Specialist.organization_id == organization_id,
+            Appointment.appointment_date >= previous_from,
+            Appointment.appointment_date <= previous_to,
+        )
+    )
+    if previous_total:
+        total_change = percentage(totals["total"] - previous_total, previous_total)
+    else:
+        total_change = None if totals["total"] else 0.0
     daily = db.execute(
         query.with_only_columns(Appointment.appointment_date.label("date"), *columns)
         .group_by(Appointment.appointment_date)
@@ -153,4 +184,12 @@ def organization_statistics(
         unique_clients=totals["unique_clients"],
         daily=[DailyAppointmentStatistics.model_validate(row) for row in daily],
         popular_services=[PopularServiceRead.model_validate(row) for row in popular],
+        previous_period=PreviousStatisticsPeriod(
+            date_from=previous_from, date_to=previous_to, total=previous_total
+        ),
+        percentages=OrganizationStatisticsPercentages(
+            total_change=total_change,
+            completed=percentage(totals["completed"], totals["total"]),
+            cancelled=percentage(totals["cancelled"], totals["total"]),
+        ),
     )
