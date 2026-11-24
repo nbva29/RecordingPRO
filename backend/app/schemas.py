@@ -389,6 +389,9 @@ class AppointmentReschedule(BaseModel):
         return AppointmentCreate.validate_start_time(value)
 
 
+AppointmentStatus = Literal["created", "confirmed", "completed", "cancelled"]
+
+
 class AppointmentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -399,13 +402,55 @@ class AppointmentRead(BaseModel):
     appointment_date: date
     start_time: time
     end_time: time
-    status: Literal["created", "confirmed", "completed", "cancelled"]
+    status: AppointmentStatus
     created_at: datetime
 
     @field_validator("created_at")
     @classmethod
     def creation_time_utc(cls, value: datetime) -> datetime:
         return value.replace(tzinfo=timezone.utc)
+
+
+class AppointmentOrganizationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    address: str
+    city: str
+
+
+class AppointmentServiceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+
+
+class AppointmentSpecialistRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+
+
+class AppointmentDetailsRead(AppointmentRead):
+    organization: AppointmentOrganizationRead
+    service: AppointmentServiceRead
+    specialist: AppointmentSpecialistRead
+
+
+class AppointmentClientRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str | None
+    email: EmailStr
+    phone: str | None
+
+
+class AdminAppointmentRead(AppointmentDetailsRead):
+    client: AppointmentClientRead
 
 
 class CategoryWithServices(CategoryRead):
