@@ -131,9 +131,7 @@ export function ClientBookingsPage() {
               )}
             </section>
           )}
-          {(filter === "upcoming" ||
-            filter === "past" ||
-            filter === "cancelled") && (
+          {(filter === "past" || filter === "cancelled") && (
             <section className={styles.lowerSection} id="history">
               <div className={styles.sectionHeader}>
                 <h2>
@@ -172,15 +170,13 @@ export function ClientBookingsPage() {
           booking={selected}
           mode={selection.mode}
           onClose={closeDialog}
-          onCancel={() => {
-            cancel(selected.id);
-            closeDialog();
-            setMessage("");
+          onCancel={async () => {
+            await cancel.mutateAsync(selected.id);
+            setMessage("Запись отменена.");
           }}
-          onReschedule={(date, time) => {
-            reschedule(selected.id, date, time);
-            closeDialog();
-            setMessage("Демонстрационная запись перенесена.");
+          onReschedule={async (date, time) => {
+            await reschedule.mutateAsync({ id: selected.id, date, time });
+            setMessage("Запись перенесена.");
           }}
         />
       )}

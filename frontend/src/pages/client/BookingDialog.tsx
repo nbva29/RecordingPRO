@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { bookingApi } from "../../api/bookingApi";
+import { ApiError } from "../../api/httpClient";
 import { Button } from "../../components/ui/Button/Button";
 import { BookingCalendar } from "../booking/BookingCalendar";
-import { localDate } from "../booking/bookingState";
 import { formatDate } from "./clientData";
 import type { ClientBooking } from "./clientData";
 import styles from "./Client.module.css";
@@ -17,23 +19,65 @@ export function BookingDialog({
   mode: Mode;
   booking: ClientBooking;
   onClose: () => void;
-  onCancel: () => void;
-  onReschedule: (date: string, time: string) => void;
+  onCancel: () => Promise<void>;
+  onReschedule: (date: string, time: string) => Promise<void>;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const submitLock = useRef(false);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [today] = useState(() => localDate(new Date()));
-  const [now] = useState(() => new Date());
-  const times = [
-    "10:00",
-    "11:00",
-    "12:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
-  ].filter((value) => date !== today || new Date(`${date}T${value}:00`) > now);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const slots = useQuery({
+    queryKey: [
+      "client-reschedule-slots",
+      booking.specialistId,
+      booking.serviceId,
+      date,
+    ],
+    queryFn: ({ signal }) =>
+      bookingApi.getSlots(
+        booking.specialistId!,
+        booking.serviceId!,
+        date,
+        signal,
+      ),
+    enabled:
+      mode === "reschedule" &&
+      !!date &&
+      !!booking.specialistId &&
+      !!booking.serviceId,
+    retry: false,
+    staleTime: 0,
+  });
+  const times =
+    slots.data?.slots.map((slot) => slot.start_time.slice(0, 5)) ?? [];
+  async function submit(action: () => Promise<void>) {
+    if (submitLock.current) return;
+    submitLock.current = true;
+    setPending(true);
+    setError("");
+    try {
+      await action();
+      onClose();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setError(
+          "Запись изменить не удалось: время занято или изменение недоступно. Выберите другое время.",
+        );
+        setTime("");
+        if (mode === "reschedule" && date) void slots.refetch();
+      } else
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Не удалось выполнить действие. Попробуйте ещё раз.",
+        );
+    } finally {
+      submitLock.current = false;
+      setPending(false);
+    }
+  }
   useEffect(() => {
     const element = dialog.current;
     element?.showModal();
@@ -47,10 +91,10 @@ export function BookingDialog({
       className={styles.dialog}
       onCancel={(event) => {
         event.preventDefault();
-        onClose();
+        if (!pending) onClose();
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (!pending && event.target === event.currentTarget) onClose();
       }}
       aria-labelledby="booking-dialog-title"
     >
@@ -66,6 +110,7 @@ export function BookingDialog({
           className={styles.close}
           type="button"
           aria-label="Закрыть"
+          disabled={pending}
           onClick={onClose}
         >
           ×
@@ -99,30 +144,27 @@ export function BookingDialog({
             </div>
           )}
           <div>
-            <dt>Стоимость</dt>
-            <dd>
-              {booking.price == null
-                ? "Не указана"
-                : `${booking.price.toLocaleString("ru-RU")} ₽`}
-            </dd>
-          </div>
-          <div>
             <dt>Статус</dt>
             <dd>
-              {booking.status === "cancelled" ? "Отменена" : "Подтверждена"}
+              {booking.status === "cancelled"
+                ? "Отменена"
+                : booking.status === "completed"
+                  ? "Завершена"
+                  : booking.status === "created"
+                    ? "Создана"
+                    : "Подтверждена"}
             </dd>
           </div>
         </dl>
       )}
       {mode === "cancel" && (
         <p>
-          Отменить демонстрационную запись на {formatDate(booking.date)} в{" "}
-          {booking.time}?
+          Отменить запись на {formatDate(booking.date)} в {booking.time}?
         </p>
       )}
       {mode === "reschedule" && (
         <>
-          <p>Выберите новую дату и время. Доступность показана для примера.</p>
+          <p>Выберите новую дату и время.</p>
           <BookingCalendar
             date={date}
             onDate={(value) => {
@@ -133,6 +175,15 @@ export function BookingDialog({
           <h3>Время</h3>
           {!date ? (
             <p className={styles.muted}>Выберите дату</p>
+          ) : slots.isFetching ? (
+            <p role="status">Загружаем свободное время…</p>
+          ) : slots.isError ? (
+            <div role="alert">
+              <p>Не удалось загрузить свободное время.</p>
+              <button type="button" onClick={() => slots.refetch()}>
+                Повторить
+              </button>
+            </div>
           ) : times.length === 0 ? (
             <p>На эту дату нет времени.</p>
           ) : (
@@ -152,19 +203,29 @@ export function BookingDialog({
           )}
         </>
       )}
+      {error && <p role="alert">{error}</p>}
       <div className={styles.dialogActions}>
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" disabled={pending} onClick={onClose}>
           {mode === "details" ? "Закрыть" : "Назад"}
         </Button>
         {mode === "cancel" && (
-          <Button onClick={onCancel}>Отменить запись</Button>
+          <Button disabled={pending} onClick={() => void submit(onCancel)}>
+            {pending ? "Отменяем…" : "Отменить запись"}
+          </Button>
         )}
         {mode === "reschedule" && (
           <Button
-            disabled={!date || !time}
-            onClick={() => onReschedule(date, time)}
+            disabled={
+              pending ||
+              !date ||
+              !time ||
+              slots.isFetching ||
+              slots.isError ||
+              !times.includes(time)
+            }
+            onClick={() => void submit(() => onReschedule(date, time))}
           >
-            Подтвердить перенос
+            {pending ? "Переносим…" : "Подтвердить перенос"}
           </Button>
         )}
       </div>

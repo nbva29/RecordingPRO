@@ -6,7 +6,7 @@ import styles from "./Client.module.css";
 export function ClientOverviewPage() {
   const { bookings, profile } = useClient();
   const { upcoming, history } = splitBookings(bookings.data ?? []);
-  const completed = history.filter((item) => item.status !== "cancelled");
+  const completed = history.filter((item) => item.status === "completed");
   const name = profile.name || "Клиент";
   return (
     <main className={`${styles.page} ${styles.dashboard}`}>

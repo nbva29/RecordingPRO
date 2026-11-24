@@ -1,28 +1,57 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../../components/ui/Button/Button";
 import { useClient } from "./useClient";
 import { validateProfile } from "./clientData";
+import { authApi } from "../../api/authApi";
+import { useAuthSession } from "../../auth/authSession";
 import styles from "./Client.module.css";
 
 export function ClientProfilePage() {
-  const { profile, setProfile } = useClient();
+  const { profileQuery } = useClient();
+  if (profileQuery.isPending)
+    return (
+      <main className={styles.page}>
+        <p role="status">Загружаем профиль…</p>
+      </main>
+    );
+  if (profileQuery.isError)
+    return (
+      <main className={styles.page}>
+        <div role="alert">
+          <p>Не удалось загрузить профиль.</p>
+          <button type="button" onClick={() => profileQuery.refetch()}>
+            Повторить
+          </button>
+        </div>
+      </main>
+    );
+  return <ProfileForm />;
+}
+
+function ProfileForm() {
+  const { profile, profileQuery, saveProfile } = useClient();
   const [editing, setEditing] = useState(true);
   const [draft, setDraft] = useState(profile);
   const [submitted, setSubmitted] = useState(false);
   const [saved, setSaved] = useState(false);
+  const saveLock = useRef(false);
   const errors = submitted ? validateProfile(draft) : {};
-  function save(event: React.FormEvent<HTMLFormElement>) {
+  async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saveLock.current) return;
     setSubmitted(true);
     if (Object.keys(validateProfile(draft)).length) return;
-    setProfile({
-      ...draft,
-      name: draft.name.trim(),
-      phone: draft.phone.trim(),
-    });
-    setEditing(false);
-    setSubmitted(false);
-    setSaved(true);
+    saveLock.current = true;
+    try {
+      await saveProfile.mutateAsync(draft);
+      setEditing(false);
+      setSubmitted(false);
+      setSaved(true);
+    } catch {
+      /* Mutation error is displayed below. */
+    } finally {
+      saveLock.current = false;
+    }
   }
   function cancel() {
     setDraft(profile);
@@ -34,9 +63,16 @@ export function ClientProfilePage() {
     <main className={`${styles.page} ${styles.profilePage}`}>
       <h1>Профиль</h1>
       <p className={styles.subtitle}>Личные данные и настройки аккаунта</p>
+      {saveProfile.isError && (
+        <p role="alert">
+          {saveProfile.error instanceof Error
+            ? saveProfile.error.message
+            : "Не удалось сохранить профиль."}
+        </p>
+      )}
       {saved && (
         <p className={styles.success} role="status">
-          Изменения сохранены локально.
+          Изменения сохранены.
         </p>
       )}
       <section className={styles.profileBanner}>
@@ -106,8 +142,17 @@ export function ClientProfilePage() {
           <div className={styles.profileActions}>
             {editing ? (
               <>
-                <Button type="submit">Сохранить изменения</Button>
-                <Button variant="secondary" onClick={cancel}>
+                <Button
+                  type="submit"
+                  disabled={saveProfile.isPending || !profileQuery.isSuccess}
+                >
+                  {saveProfile.isPending ? "Сохраняем…" : "Сохранить изменения"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={saveProfile.isPending}
+                  onClick={cancel}
+                >
                   Отмена
                 </Button>
               </>
@@ -124,14 +169,113 @@ export function ClientProfilePage() {
             )}
           </div>
         </form>
-        <section className={styles.section}>
-          <h2>Безопасность</h2>
-          <p className={styles.securityText}>
-            Управление паролем будет доступно после подключения настроек
-            аккаунта.
-          </p>
-        </section>
+        <PasswordForm />
       </div>
     </main>
+  );
+}
+
+function PasswordForm() {
+  const token = useAuthSession((state) => state.accessToken);
+  const [current, setCurrent] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const lock = useRef(false);
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (lock.current) return;
+    setError("");
+    setSuccess(false);
+    if (!current || current.length > 128) {
+      setError("Введите текущий пароль длиной до 128 символов.");
+      return;
+    }
+    if (password.length < 8 || password.length > 128) {
+      setError("Новый пароль должен содержать от 8 до 128 символов.");
+      return;
+    }
+    if (password !== confirmation) {
+      setError("Новый пароль и подтверждение не совпадают.");
+      return;
+    }
+    if (!token) {
+      setError("Войдите в аккаунт заново.");
+      return;
+    }
+    lock.current = true;
+    setPending(true);
+    try {
+      await authApi.changePassword(token, current, password);
+      setCurrent("");
+      setPassword("");
+      setConfirmation("");
+      setSuccess(true);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Не удалось сменить пароль.",
+      );
+    } finally {
+      lock.current = false;
+      setPending(false);
+    }
+  }
+
+  return (
+    <form
+      className={`${styles.section} ${styles.profile} ${styles.securityForm}`}
+      onSubmit={submit}
+      noValidate
+    >
+      <h2>Безопасность</h2>
+      <label>
+        Текущий пароль
+        <input
+          type="password"
+          autoComplete="current-password"
+          maxLength={128}
+          value={current}
+          onChange={(event) => setCurrent(event.target.value)}
+        />
+      </label>
+      <label>
+        Новый пароль
+        <input
+          type="password"
+          autoComplete="new-password"
+          maxLength={128}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+      </label>
+      <label>
+        Подтверждение пароля
+        <input
+          type="password"
+          autoComplete="new-password"
+          maxLength={128}
+          value={confirmation}
+          onChange={(event) => setConfirmation(event.target.value)}
+        />
+      </label>
+      {error && (
+        <p role="alert" className={styles.passwordError}>
+          {error}
+        </p>
+      )}
+      {success && (
+        <p role="status" className={styles.passwordSuccess}>
+          Пароль изменён.
+        </p>
+      )}
+      <div className={styles.securityActions}>
+        <Button type="submit" disabled={pending}>
+          {pending ? "Сохраняем…" : "Сменить пароль"}
+        </Button>
+      </div>
+    </form>
   );
 }
