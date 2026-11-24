@@ -134,7 +134,7 @@
 }
 .badge.cancelled {
   background: #fff1f0;
-  color: #b04c4c;
+  color: #dd4747;
 }
 .cardFooter {
   border-top: 1px solid var(--color-border);
@@ -632,7 +632,7 @@
 .profileFields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  gap: 14px;
 }
 .profile label {
   margin-top: 14px;
@@ -648,6 +648,10 @@
   color: var(--color-text-secondary);
   font-size: 13px;
 }
+.securityActions { display: flex; justify-content: center; margin-top: 20px; }
+.securityActions button { min-width: 200px; height: 40px; font-size: 14px; }
+.passwordError { color: #b04c4c; font-size: 13px; }
+.passwordSuccess { color: var(--color-primary); font-size: 13px; }
 .profile input:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
@@ -687,6 +691,10 @@
 .cardActions {
   width: min(328px, 100%);
   justify-self: end;
+}
+.cardActions button:not(:first-child) {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .badge.upcoming {
   color: var(--color-primary);

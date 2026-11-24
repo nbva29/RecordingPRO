@@ -19,9 +19,11 @@ export function BookingCard({
   const label =
     booking.status === "cancelled"
       ? "Отменена"
-      : upcoming
-        ? "Подтверждена"
-        : "Завершена";
+      : booking.status === "completed"
+        ? "Завершена"
+        : booking.status === "created"
+          ? "Создана"
+          : "Подтверждена";
   const duration =
     booking.duration == null
       ? null
