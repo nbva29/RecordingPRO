@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import EmailStr, Field, SecretStr
+from pydantic import EmailStr, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: SecretStr = SecretStr("")
     smtp_from: EmailStr | None = None
+
+    @field_validator("smtp_from", mode="before")
+    @classmethod
+    def empty_sender_is_none(cls, value: object) -> object:
+        return None if value == "" else value
 
 
 settings = Settings()
