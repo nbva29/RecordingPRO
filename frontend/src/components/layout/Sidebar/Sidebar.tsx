@@ -1,27 +1,36 @@
-import type { LucideIcon } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
-import logo from '../../../assets/logo.svg'
-import styles from './Sidebar.module.css'
-import { Button } from '../../ui/Button/Button'
+import type { LucideIcon } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import logo from "../../../assets/logo.svg";
+import styles from "./Sidebar.module.css";
+import { Button } from "../../ui/Button/Button";
 
 export interface SidebarItem {
-  label: string
-  to: string
-  icon: LucideIcon
-  end?: boolean
+  label: string;
+  to: string;
+  icon: LucideIcon;
+  end?: boolean;
 }
 
 interface SidebarProps {
-  items: readonly SidebarItem[]
-  label: string
-  user: string
-  onLogout?: () => void
+  items: readonly SidebarItem[];
+  label: string;
+  user: string;
+  onLogout?: () => void;
+  showUser?: boolean;
 }
 
-export function Sidebar({ items, label, user, onLogout }: SidebarProps) {
+export function Sidebar({
+  items,
+  label,
+  user,
+  onLogout,
+  showUser = true,
+}: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
-      <NavLink to="/" className={styles.brand} aria-label="ЗаписьПро — главная"><img src={logo} alt="ЗаписьПро" width={214} height={31} /></NavLink>
+      <NavLink to="/" className={styles.brand} aria-label="ЗаписьПро — главная">
+        <img src={logo} alt="ЗаписьПро" width={214} height={31} />
+      </NavLink>
       <nav aria-label={label}>
         <ul className={styles.menu}>
           {items.map(({ label: itemLabel, to, icon: Icon, end }) => (
@@ -30,7 +39,9 @@ export function Sidebar({ items, label, user, onLogout }: SidebarProps) {
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  [styles.link, isActive && styles.active].filter(Boolean).join(' ')
+                  [styles.link, isActive && styles.active]
+                    .filter(Boolean)
+                    .join(" ")
                 }
               >
                 <Icon size={22} strokeWidth={1.75} aria-hidden="true" />
@@ -40,8 +51,16 @@ export function Sidebar({ items, label, user, onLogout }: SidebarProps) {
           ))}
         </ul>
       </nav>
-      <div className={styles.user}>● {user}</div>
-      {onLogout && <Button variant="secondary" className={styles.logout} onClick={onLogout}>Выйти</Button>}
+      {showUser && <div className={styles.user}>● {user}</div>}
+      {onLogout && (
+        <Button
+          variant="secondary"
+          className={styles.logout}
+          onClick={onLogout}
+        >
+          Выйти
+        </Button>
+      )}
     </aside>
-  )
+  );
 }

@@ -61,3 +61,7 @@
   margin-top: 16px;
   font-size: 16px;
 }
+
+:global(#admin-cabinet) .sidebar .logout {
+  margin-top: auto;
+}

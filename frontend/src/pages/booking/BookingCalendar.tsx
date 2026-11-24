@@ -5,13 +5,18 @@ import styles from "./Booking.module.css";
 export function BookingCalendar({
   date,
   onDate,
+  allowPast = false,
 }: {
   date: string;
   onDate: (date: string) => void;
+  allowPast?: boolean;
 }) {
   const [today] = useState(() => localDate(new Date()));
   const [month, setMonth] = useState(() => {
-    const d = date && date >= today ? new Date(`${date}T00:00:00`) : new Date();
+    const d =
+      date && (allowPast || date >= today)
+        ? new Date(`${date}T00:00:00`)
+        : new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
   const offset = (month.getDay() + 6) % 7;
@@ -30,7 +35,7 @@ export function BookingCalendar({
           <button
             type="button"
             aria-label="Предыдущий месяц"
-            disabled={month <= currentMonth}
+            disabled={!allowPast && month <= currentMonth}
             onClick={() =>
               setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))
             }
@@ -65,7 +70,7 @@ export function BookingCalendar({
             <button
               type="button"
               key={value}
-              disabled={value < today}
+              disabled={!allowPast && value < today}
               aria-label={new Intl.DateTimeFormat("ru-RU", {
                 day: "numeric",
                 month: "long",
