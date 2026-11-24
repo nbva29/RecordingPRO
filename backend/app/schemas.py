@@ -453,6 +453,39 @@ class AdminAppointmentRead(AppointmentDetailsRead):
     client: AppointmentClientRead
 
 
+class AppointmentStatisticsCounts(BaseModel):
+    total: int
+    created: int
+    confirmed: int
+    completed: int
+    cancelled: int
+    upcoming: int
+    history: int
+
+
+class ClientStatisticsRead(BaseModel):
+    date_from: date
+    date_to: date
+    counts: AppointmentStatisticsCounts
+
+
+class DailyAppointmentStatistics(AppointmentStatisticsCounts):
+    date: date
+
+
+class PopularServiceRead(BaseModel):
+    service_id: int
+    name: str
+    appointments_count: int
+
+
+class OrganizationStatisticsRead(ClientStatisticsRead):
+    organization_id: int
+    unique_clients: int
+    daily: list[DailyAppointmentStatistics]
+    popular_services: list[PopularServiceRead]
+
+
 class CategoryWithServices(CategoryRead):
     services: list[ServiceRead]
 
