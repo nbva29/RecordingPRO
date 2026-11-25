@@ -38,6 +38,10 @@ function isUser(value: unknown): value is AuthUserDto {
     value.email.trim().length > 0 &&
     (value.name === null || typeof value.name === "string") &&
     (value.phone === null || typeof value.phone === "string") &&
+    (value.organization_id === null ||
+      (typeof value.organization_id === "number" &&
+        Number.isInteger(value.organization_id) &&
+        value.organization_id > 0)) &&
     typeof value.role.id === "number" &&
     Number.isInteger(value.role.id) &&
     value.role.id > 0 &&
@@ -197,6 +201,30 @@ function credentialsBody(values: AuthCredentials): AuthCredentials {
 }
 
 export const authApi = {
+  registerAdmin(
+    values: AuthCredentials & {
+      name: string;
+      phone: string | null;
+      organization: { name: string; city: string; address: string };
+    },
+    signal?: AbortSignal,
+  ): Promise<AuthUserDto> {
+    return request(
+      "register",
+      () =>
+        client.post(
+          "/register-admin",
+          {
+            ...credentialsBody(values),
+            name: values.name.trim(),
+            phone: values.phone?.trim() || null,
+            organization: values.organization,
+          },
+          { signal },
+        ),
+      isUser,
+    );
+  },
   register(
     values: AuthCredentials,
     signal?: AbortSignal,

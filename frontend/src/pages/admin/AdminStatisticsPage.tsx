@@ -1,65 +1,42 @@
+import { useAuthSession } from "../../auth/authSession";
 import { useRef, useState } from "react";
-import { useAdmin } from "./useAdmin";
+import { useQuery } from "@tanstack/react-query";
+import { adminApi } from "../../api/adminApi";
 import styles from "./Admin.module.css";
 
 export function AdminStatisticsPage() {
-  const { data } = useAdmin();
-  const [today] = useState(() => new Date());
   const [periodDays, setPeriodDays] = useState(30);
+  const organizationId =
+    useAuthSession((state) => state.user?.organization_id) ?? 0;
   const periodRef = useRef<HTMLDetailsElement>(null);
-  const items = data.data?.appointments ?? [];
-  const end = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate() + 1,
-  );
-  const start = new Date(end);
-  start.setDate(end.getDate() - periodDays);
-  const inPeriod = items.filter((item) => {
-    const date = new Date(`${item.date}T00:00:00`);
-    return date >= start && date < end;
+  const data = useQuery({
+    queryKey: ["admin-statistics", organizationId, periodDays],
+    queryFn: ({ signal }) =>
+      adminApi.statistics(organizationId, periodDays, signal),
+    retry: false,
   });
-  const previousStart = new Date(start);
-  previousStart.setDate(start.getDate() - periodDays);
-  const previousCount = items.filter((item) => {
-    const date = new Date(`${item.date}T00:00:00`);
-    return date >= previousStart && date < start;
-  }).length;
-  const changePercent = previousCount ? ((inPeriod.length - previousCount) / previousCount) * 100 : null;
-  const percentage = (value: number) => inPeriod.length ? `${((value / inPeriod.length) * 100).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}%` : "—";
-  const completed = inPeriod.filter(
-    (item) => item.status === "completed",
-  ).length;
-  const cancelled = inPeriod.filter(
-    (item) => item.status === "cancelled",
-  ).length;
-  const weeks = Array.from(
-    { length: Math.ceil(periodDays / 7) },
-    (_, i) =>
-      inPeriod.filter((item) => {
+  const stats = data.data;
+  const total = stats?.counts.total ?? 0;
+  const completed = stats?.counts.completed ?? 0;
+  const cancelled = stats?.counts.cancelled ?? 0;
+  const changePercent = stats?.percentages.total_change ?? null;
+  const weeks = Array.from({ length: Math.ceil(periodDays / 7) }, (_, i) => {
+    if (!stats) return 0;
+    const from = new Date(`${stats.date_from}T00:00:00`);
+    from.setDate(from.getDate() + i * 7);
+    const until = new Date(from);
+    until.setDate(until.getDate() + 7);
+    return stats.daily
+      .filter((item) => {
         const day = new Date(`${item.date}T00:00:00`);
-        return (
-          day >=
-            new Date(
-              start.getFullYear(),
-              start.getMonth(),
-              start.getDate() + i * 7,
-            ) &&
-          day <
-            new Date(
-              start.getFullYear(),
-              start.getMonth(),
-              start.getDate() + Math.min((i + 1) * 7, periodDays),
-            )
-        );
-      }).length,
-  );
-  const groups = [...new Set(inPeriod.map((item) => item.service))]
-    .map((name) => ({
-      name,
-      count: inPeriod.filter((item) => item.service === name).length,
-    }))
-    .sort((a, b) => b.count - a.count);
+        return day >= from && day < until;
+      })
+      .reduce((sum, item) => sum + item.total, 0);
+  });
+  const groups = (stats?.popular_services ?? []).map((item) => ({
+    name: item.name,
+    count: item.appointments_count,
+  }));
   const max = Math.max(1, ...weeks);
   return (
     <main className={`${styles.page} ${styles.statisticsPage}`}>
@@ -110,7 +87,11 @@ export function AdminStatisticsPage() {
         <p role="status">Загружаем данные…</p>
       ) : data.isError ? (
         <div role="alert">
-          <p>Не удалось загрузить данные.</p>
+          <p>
+            {data.error instanceof Error
+              ? data.error.message
+              : "Не удалось загрузить данные."}
+          </p>
           <button
             type="button"
             className={styles.textButton}
@@ -124,18 +105,22 @@ export function AdminStatisticsPage() {
           <div className={styles.overviewGrid}>
             <section className={styles.stat}>
               <span>Всего записей</span>
-              <strong>{inPeriod.length}</strong>
-              <small>{changePercent === null ? "Нет данных для сравнения" : `${changePercent > 0 ? "+" : ""}${changePercent.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}% к прошлому периоду`}</small>
+              <strong>{total}</strong>
+              <small>
+                {changePercent === null
+                  ? "Нет данных для сравнения"
+                  : `${changePercent > 0 ? "+" : ""}${changePercent.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}% к прошлому периоду`}
+              </small>
             </section>
             <section className={styles.stat}>
               <span>Завершено</span>
               <strong>{completed}</strong>
-              <small>{percentage(completed)} от всех записей</small>
+              <small>{stats?.percentages.completed}% от всех записей</small>
             </section>
             <section className={styles.stat}>
               <span>Отменено</span>
               <strong>{cancelled}</strong>
-              <small>{percentage(cancelled)} от всех записей</small>
+              <small>{stats?.percentages.cancelled}% от всех записей</small>
             </section>
           </div>
           <div className={styles.dashboardGrid}>
@@ -177,7 +162,7 @@ export function AdminStatisticsPage() {
                     <div className={styles.progress}>
                       <span
                         style={{
-                          width: `${(item.count / inPeriod.length) * 100}%`,
+                          width: `${(item.count / Math.max(1, total)) * 100}%`,
                         }}
                       />
                     </div>

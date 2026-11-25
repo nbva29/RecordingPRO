@@ -102,7 +102,7 @@ export function OptionsEditor({
             onChange([
               ...options,
               {
-                id: Math.max(0, ...options.map((item) => item.id)) + 1,
+                id: Math.min(0, ...options.map((item) => item.id)) - 1,
                 name: "",
                 price: "",
               },

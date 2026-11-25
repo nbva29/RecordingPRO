@@ -13,9 +13,10 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.mail import send_password_reset_email
-from app.models import Role, User
+from app.models import Organization, Role, User
 from app.schemas import (
     MessageRead,
+    AdminRegistration,
     PasswordChange,
     PasswordResetConfirm,
     PasswordResetRequest,
@@ -88,6 +89,11 @@ def get_current_admin(
     return user
 
 
+def require_organization_admin(user: User, organization_id: int) -> None:
+    if user.role.name != "admin" or user.organization_id != organization_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Нет доступа к этой организации")
+
+
 @router.post(
     "/register",
     response_model=UserRead,
@@ -125,6 +131,27 @@ def register(
             raise email_conflict() from None
         raise
 
+    db.refresh(user)
+    return UserRead.model_validate(user)
+
+
+@router.post('/register-admin', response_model=UserRead, status_code=status.HTTP_201_CREATED, summary='Регистрация администратора и организации')
+def register_admin(data: AdminRegistration, db: Annotated[Session, Depends(get_db)]) -> UserRead:
+    if db.scalar(select(User.id).where(User.email == data.email)) is not None:
+        raise email_conflict()
+    role = db.scalar(select(Role).where(Role.name == 'admin'))
+    if role is None:
+        raise HTTPException(status_code=503, detail='Регистрация временно недоступна')
+    user = User(email=data.email, password_hash=hash_password(data.password.get_secret_value()), name=data.name.strip(), phone=data.phone, role=role)
+    organization = Organization(**data.organization.model_dump(), owner=user)
+    db.add(organization)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        if db.scalar(select(User.id).where(User.email == data.email)) is not None:
+            raise email_conflict() from None
+        raise
     db.refresh(user)
     return UserRead.model_validate(user)
 

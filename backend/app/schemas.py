@@ -51,6 +51,7 @@ class UserRead(BaseModel):
     name: str | None
     phone: str | None
     role: RoleRead
+    organization_id: int | None = None
 
 
 class UserUpdate(BaseModel):
@@ -105,6 +106,20 @@ class OrganizationCreate(BaseModel):
     address: str = Field(min_length=1, max_length=255)
     city: str = Field(min_length=1, max_length=100)
     phone: str | None = Field(default=None, max_length=32)
+
+
+class AdminRegistration(UserCreate):
+    name: str = Field(min_length=1, max_length=100)
+    phone: str | None = Field(default=None, max_length=32)
+    organization: OrganizationCreate
+
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError('Имя обязательно')
+        return value
 
 
 class OrganizationUpdate(BaseModel):
@@ -176,6 +191,7 @@ class ServiceCreate(BaseModel):
 class ServiceUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
+    category_id: int | None = Field(default=None, gt=0)
     name: str | None = Field(default=None, min_length=1, max_length=150)
     description: str | None = Field(default=None, max_length=2000)
     price: int | None = Field(default=None, ge=0, le=10_000_000)
@@ -184,6 +200,7 @@ class ServiceUpdate(BaseModel):
     is_available_for_online_booking: bool | None = Field(default=None)
 
     @field_validator(
+        "category_id",
         "name",
         "price",
         "duration",

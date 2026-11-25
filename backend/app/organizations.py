@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.auth import get_current_admin
+from app.auth import get_current_admin, require_organization_admin
 from app.database import get_db
-from app.models import Category, Organization, User
+from app.models import Category, Organization, Role, User
+from sqlalchemy.exc import IntegrityError
 from app.schemas import (
     OrganizationCard,
     OrganizationCreate,
@@ -67,11 +68,22 @@ def get_organization_card(db: Session, organization_id: int) -> Organization:
 def create_organization(
     data: OrganizationCreate,
     db: Annotated[Session, Depends(get_db)],
-    _admin: Annotated[User, Depends(get_current_admin)],
+    user: Annotated[User, Depends(get_current_admin)],
 ) -> OrganizationRead:
-    organization = Organization(**data.model_dump())
+    user = db.scalar(select(User).where(User.id == user.id).with_for_update())
+    if user is None or db.scalar(select(Organization.id).where(Organization.owner_id == user.id)) is not None:
+        raise HTTPException(status_code=409, detail="Пользователь уже управляет организацией")
+    admin_role = db.scalar(select(Role).where(Role.name == "admin"))
+    if admin_role is None:
+        raise HTTPException(status_code=503, detail="Создание организации временно недоступно")
+    organization = Organization(**data.model_dump(), owner_id=user.id)
+    user.role = admin_role
     db.add(organization)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Пользователь уже управляет организацией") from None
     db.refresh(organization)
     return OrganizationRead.model_validate(organization)
 
@@ -140,6 +152,7 @@ def update_organization(
     db: Annotated[Session, Depends(get_db)],
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> OrganizationRead:
+    require_organization_admin(_admin, organization_id)
     organization = get_organization(db, organization_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(organization, field, value)

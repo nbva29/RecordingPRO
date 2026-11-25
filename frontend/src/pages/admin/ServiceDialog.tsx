@@ -1,4 +1,7 @@
+import { useAuthSession } from "../../auth/authSession";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { adminApi } from "../../api/adminApi";
 import { Button } from "../../components/ui/Button/Button";
 import { parseOptions, validateService } from "./adminData";
 import type { AdminService } from "./adminData";
@@ -17,16 +20,24 @@ export function ServiceDialog({
   onSave,
   onClose,
   onDelete,
+  pending = false,
+  error = "",
 }: {
   service: AdminService | null;
   categories: { id: number; name: string }[];
   onSave: (
     service: Omit<AdminService, "id"> & { id?: number },
     categoryName: string,
+    specialistIds: number[],
+    newSpecialist: string,
   ) => void;
   onClose: () => void;
   onDelete?: () => void;
+  pending?: boolean;
+  error?: string;
 }) {
+  const organizationId =
+    useAuthSession((state) => state.user?.organization_id) ?? 0;
   const [draft, setDraft] = useState<Draft>(() => ({
     id: service?.id ?? 0,
     name: service?.name ?? "",
@@ -48,6 +59,19 @@ export function ServiceDialog({
       categories.find((item) => item.id === service?.categoryId)?.name ?? "",
   );
   const [submitted, setSubmitted] = useState(false);
+  const specialists = useQuery({
+    queryKey: ["admin-specialists", organizationId],
+    queryFn: ({ signal }) => adminApi.specialists(organizationId, signal),
+    retry: false,
+  });
+  const [chosen, setChosen] = useState<number[] | null>(null);
+  const [newSpecialist, setNewSpecialist] = useState("");
+  const selectedIds =
+    chosen ??
+    specialists.data
+      ?.filter((item) => service && item.service_ids.includes(service.id))
+      .map((item) => item.id) ??
+    [];
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [options, setOptions] = useState(() =>
     (service?.options ?? []).map((item) => ({
@@ -70,8 +94,18 @@ export function ServiceDialog({
   function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);
-    if (Object.keys(validateService(parsed)).length || !parsedOptions) return;
-    onSave({ ...parsed, id: service?.id }, categoryName.trim());
+    if (
+      Object.keys(validateService(parsed)).length ||
+      !parsedOptions ||
+      !specialists.isSuccess
+    )
+      return;
+    onSave(
+      { ...parsed, id: service?.id },
+      categoryName.trim(),
+      selectedIds,
+      newSpecialist.trim(),
+    );
   }
   const finalPrice =
     Number.isInteger(parsed.price) &&
@@ -115,8 +149,7 @@ export function ServiceDialog({
                   Категория
                   <input
                     value={categoryName}
-                    disabled={!!service}
-                    maxLength={150}
+                    maxLength={100}
                     onChange={(e) => setCategoryName(e.target.value)}
                     aria-invalid={!!errors.categoryId}
                   />
@@ -143,26 +176,6 @@ export function ServiceDialog({
                 </label>
               </div>
               <label>
-                Адрес
-                <input
-                  maxLength={255}
-                  value={draft.address ?? ""}
-                  onChange={(e) =>
-                    setDraft({ ...draft, address: e.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Мастер
-                <input
-                  maxLength={150}
-                  value={draft.specialist ?? ""}
-                  onChange={(e) =>
-                    setDraft({ ...draft, specialist: e.target.value })
-                  }
-                />
-              </label>
-              <label>
                 Описание
                 <textarea
                   maxLength={2000}
@@ -173,6 +186,53 @@ export function ServiceDialog({
                   }
                 />
               </label>
+              <fieldset
+                className={styles.specialistSelection}
+                disabled={pending}
+              >
+                <legend>Мастера услуги</legend>
+                {specialists.isPending ? (
+                  <p role="status">Загружаем мастеров…</p>
+                ) : specialists.isError ? (
+                  <div role="alert">
+                    <p>Не удалось загрузить мастеров.</p>
+                    <button type="button" onClick={() => specialists.refetch()}>
+                      Повторить
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {specialists.data.length === 0 && <p>Мастеров пока нет.</p>}
+                    {specialists.data.map((item) => (
+                      <label key={item.id} className={styles.specialistChoice}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(item.id)}
+                          onChange={(event) =>
+                            setChosen(
+                              event.target.checked
+                                ? [...selectedIds, item.id]
+                                : selectedIds.filter((id) => id !== item.id),
+                            )
+                          }
+                        />
+                        {item.name}
+                      </label>
+                    ))}
+                    <label>
+                      Добавить нового мастера
+                      <input
+                        maxLength={150}
+                        value={newSpecialist}
+                        onChange={(event) =>
+                          setNewSpecialist(event.target.value)
+                        }
+                        placeholder="Имя мастера"
+                      />
+                    </label>
+                  </>
+                )}
+              </fieldset>
             </div>
           </section>
           <section className={styles.section}>
@@ -238,21 +298,6 @@ export function ServiceDialog({
                   )}
               </strong>
             </div>
-            <label className={styles.switchRow}>
-              Показывать старую цену
-              <input
-                className={styles.switchInput}
-                type="checkbox"
-                checked={!!draft.showOldPrice}
-                onChange={(e) =>
-                  setDraft({ ...draft, showOldPrice: e.target.checked })
-                }
-              />
-              <span className={styles.switchTrack} aria-hidden="true" />
-            </label>
-            <p className={styles.switchHint}>
-              Клиент увидит скидку в карточке услуги
-            </p>
           </section>
           <div className={`${styles.section} ${styles.onlineBox}`}>
             <label className={styles.switchRow}>
@@ -269,13 +314,17 @@ export function ServiceDialog({
             </label>
           </div>
           <div className={styles.dialogActions}>
-            <Button type="submit">Сохранить услугу</Button>
-            <Button variant="secondary" onClick={onClose}>
+            {error && <p role="alert">{error}</p>}
+            <Button type="submit" disabled={pending || !specialists.isSuccess}>
+              {pending ? "Сохраняем…" : "Сохранить услугу"}
+            </Button>
+            <Button variant="secondary" disabled={pending} onClick={onClose}>
               Отмена
             </Button>
             {service && onDelete && (
               <button
                 type="button"
+                disabled={pending}
                 className={styles.deleteService}
                 onClick={() => setConfirmDelete(true)}
               >
@@ -290,12 +339,15 @@ export function ServiceDialog({
           title="Удалить услугу?"
           onClose={() => setConfirmDelete(false)}
         >
-          <p>Услуга будет удалена из локального списка.</p>
+          <p>Услуга будет удалена.</p>
           <div className={styles.dialogActions}>
             <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
               Отмена
             </Button>
-            <Button onClick={onDelete}>Удалить</Button>
+            {error && <p role="alert">{error}</p>}
+            <Button disabled={pending} onClick={onDelete}>
+              Удалить
+            </Button>
           </div>
         </AdminDialog>
       )}
