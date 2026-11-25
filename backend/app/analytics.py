@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_admin, get_current_user
+from app.auth import get_current_admin, get_current_user, require_organization_admin
 from app.database import get_db
 from app.models import Appointment, Service, Specialist, User
 from app.organizations import get_organization
@@ -125,6 +125,7 @@ def organization_statistics(
     now = datetime.now()
     date_from, date_to = resolve_period(period.period_days, now.date())
     get_organization(db, organization_id)
+    require_organization_admin(_admin, organization_id)
     columns = count_columns(now)
     query = (
         select(*columns)

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_admin
+from app.auth import get_current_admin, require_organization_admin
 from app.database import get_db
 from app.models import Appointment, Specialist, User, WorkSchedule
 from app.schemas import (
@@ -177,6 +177,7 @@ def replace_schedule(
             status_code=status.HTTP_404_NOT_FOUND, detail="Специалист не найден"
         )
 
+    require_organization_admin(_admin, specialist.organization_id)
     intervals = sorted(
         data.intervals, key=lambda item: (item.day_of_week, item.start_time)
     )

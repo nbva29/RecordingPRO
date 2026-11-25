@@ -59,7 +59,7 @@ export interface AdminAppointment {
   client: string;
   phone: string | null;
   email: string | null;
-  status: "confirmed" | "cancelled" | "completed";
+  status: "created" | "confirmed" | "cancelled" | "completed";
 }
 export interface AdminData {
   organization: string;
@@ -68,6 +68,7 @@ export interface AdminData {
   appointments: AdminAppointment[];
 }
 export const appointmentStatus = {
+  created: "Создана",
   confirmed: "Подтверждена",
   cancelled: "Отменена",
   completed: "Завершена",

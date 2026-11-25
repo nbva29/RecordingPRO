@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import Select, and_, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.auth import get_current_admin, get_current_user
+from app.auth import get_current_admin, get_current_user, require_organization_admin
 from app.database import get_db
 from app.models import Appointment, Specialist, User
 from app.organizations import get_organization
@@ -110,10 +110,8 @@ def read_appointment(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Запись не найдена"
         )
-    if appointment.client_id != current_user.id and current_user.role.name != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Нет доступа к этой записи"
-        )
+    if appointment.client_id != current_user.id:
+        require_organization_admin(current_user, appointment.specialist.organization_id)
     return appointment_details(appointment)
 
 
@@ -147,6 +145,7 @@ def organization_appointments(
             detail="Дата начала периода должна быть не позже даты окончания",
         )
     get_organization(db, organization_id)
+    require_organization_admin(_admin, organization_id)
     if specialist_id is not None:
         specialist = db.get(Specialist, specialist_id)
         if specialist is None or specialist.organization_id != organization_id:

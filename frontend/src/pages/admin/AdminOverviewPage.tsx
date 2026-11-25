@@ -5,13 +5,45 @@ import { localDate } from "../booking/bookingState";
 import { AppointmentDialog } from "./AppointmentDialog";
 import { appointmentStatus } from "./adminData";
 import type { AdminAppointment } from "./adminData";
-import { useAdmin } from "./useAdmin";
+import { useQuery } from "@tanstack/react-query";
+import { adminApi } from "../../api/adminApi";
 import styles from "./Admin.module.css";
 
 export function AdminOverviewPage() {
-  const { data } = useAdmin();
   const [selected, setSelected] = useState<AdminAppointment | null>(null);
+  const organizationId =
+    useAuthSession((state) => state.user?.organization_id) ?? 0;
   const [now] = useState(() => new Date());
+  const from = localDate(now);
+  const [until] = useState(() => {
+    const day = new Date();
+    day.setDate(day.getDate() + 7);
+    return localDate(day);
+  });
+  const data = useQuery({
+    queryKey: ["admin-overview", organizationId, from, until],
+    queryFn: async ({ signal }) => {
+      const [rows, statistics] = await Promise.all([
+        adminApi.appointments(organizationId, from, until, signal),
+        adminApi.statistics(organizationId, 30, signal),
+      ]);
+      return {
+        statistics,
+        appointments: rows.map((item) => ({
+          id: item.id,
+          date: item.appointment_date,
+          time: item.start_time.slice(0, 5),
+          service: item.service.name,
+          specialist: item.specialist.name,
+          client: item.client.name || item.client.email,
+          phone: item.client.phone,
+          email: item.client.email,
+          status: item.status,
+        })),
+      };
+    },
+    retry: false,
+  });
   const name = useAuthSession((state) => state.user?.name);
   const appointments = data.data?.appointments ?? [];
   const today = appointments.filter((item) => item.date === localDate(now));
@@ -59,8 +91,8 @@ export function AdminOverviewPage() {
             </section>
             <section className={styles.stat}>
               <span>Всего записей</span>
-              <strong>{appointments.length}</strong>
-              <small>В демонстрационных данных</small>
+              <strong>{data.data?.statistics.counts.total ?? "—"}</strong>
+              <small>За последние 30 дней</small>
             </section>
           </div>
           <div className={styles.dashboardGrid}>

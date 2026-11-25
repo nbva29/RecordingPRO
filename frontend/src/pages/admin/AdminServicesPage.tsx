@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button/Button";
 import { ServiceCard } from "./ServiceCard";
@@ -20,9 +20,32 @@ export function AdminServicesPage() {
     params.get("create") === "1" ? { mode: "create" } : null,
   );
   const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const actionLock = useRef(false);
+  async function perform(action: () => Promise<void>, success: string) {
+    if (actionLock.current) return;
+    actionLock.current = true;
+    setPending(true);
+    setError("");
+    try {
+      await action();
+      actionLock.current = false;
+      closeDialog();
+      setMessage(success);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Не удалось выполнить действие.",
+      );
+    } finally {
+      actionLock.current = false;
+      setPending(false);
+    }
+  }
   const services = data.data?.services ?? [];
   const categories = data.data?.categories ?? [];
   function closeDialog() {
+    if (actionLock.current) return;
     setDialog(null);
     if (params.has("create")) {
       const next = new URLSearchParams(params);
@@ -41,28 +64,35 @@ export function AdminServicesPage() {
           key={dialog.mode === "edit" ? dialog.service.id : "new"}
           service={dialog.mode === "edit" ? dialog.service : null}
           categories={categories}
+          pending={pending}
+          error={error}
           onClose={closeDialog}
           onDelete={
             dialog.mode === "edit"
               ? () => {
-                  deleteService(dialog.service.id);
-                  closeDialog();
-                  setMessage("Услуга удалена из локального списка.");
+                  void perform(
+                    () => deleteService(dialog.service.id),
+                    "Услуга удалена.",
+                  );
                 }
               : undefined
           }
-          onSave={(service, categoryName) => {
-            saveService(
-              {
-                ...service,
-                id:
-                  service.id ??
-                  Math.max(0, ...services.map((item) => item.id)) + 1,
-              },
-              categoryName,
+          onSave={(service, categoryName, specialistIds, newSpecialist) => {
+            void perform(
+              () =>
+                saveService(
+                  {
+                    ...service,
+                    id:
+                      service.id ??
+                      Math.max(0, ...services.map((item) => item.id)) + 1,
+                  },
+                  categoryName,
+                  specialistIds,
+                  newSpecialist,
+                ),
+              "Услуга сохранена.",
             );
-            closeDialog();
-            setMessage("Изменения сохранены локально.");
           }}
         />
       </main>
@@ -88,6 +118,7 @@ export function AdminServicesPage() {
           {message}
         </p>
       )}
+      {error && <p role="alert">{error}</p>}
       {data.isPending ? (
         <p role="status">Загружаем услуги…</p>
       ) : data.isError ? (
@@ -127,40 +158,40 @@ export function AdminServicesPage() {
           </div>
         </section>
       ) : (
-        <div className={styles.empty}>
+        <div className={`${styles.empty} ${styles.emptyServices}`}>
           <h2>Услуг пока нет</h2>
           <p>Добавьте первую услугу вашей организации.</p>
-          <Button onClick={() => setDialog({ mode: "create" })}>
-            Добавить услугу
-          </Button>
         </div>
       )}
       {dialog?.mode === "price" && (
         <PriceDialog
           service={dialog.service}
           organization={data.data?.organization}
+          pending={pending}
+          error={error}
           onClose={closeDialog}
           onSave={(price, options, details) => {
-            setPrice(dialog.service.id, price, options, details);
-            closeDialog();
-            setMessage("Цена изменена локально.");
+            void perform(
+              () => setPrice(dialog.service.id, price, options, details),
+              "Цена сохранена.",
+            );
           }}
         />
       )}
       {dialog?.mode === "delete" && (
         <AdminDialog title="Удалить услугу?" onClose={closeDialog}>
-          <p>
-            «{dialog.service.name}» будет удалена из локального списка услуг.
-          </p>
+          <p>«{dialog.service.name}» будет удалена.</p>
           <div className={styles.dialogActions}>
             <Button variant="secondary" onClick={closeDialog}>
               Отмена
             </Button>
             <Button
+              disabled={pending}
               onClick={() => {
-                deleteService(dialog.service.id);
-                closeDialog();
-                setMessage("Услуга удалена из локального списка.");
+                void perform(
+                  () => deleteService(dialog.service.id),
+                  "Услуга удалена.",
+                );
               }}
             >
               Удалить услугу

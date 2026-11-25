@@ -11,6 +11,8 @@ export function PriceDialog({
   organization,
   onSave,
   onClose,
+  pending = false,
+  error = "",
 }: {
   service: AdminService;
   organization?: string;
@@ -20,16 +22,18 @@ export function PriceDialog({
     details: PriceDetails,
   ) => void;
   onClose: () => void;
+  pending?: boolean;
+  error?: string;
 }) {
   const [value, setValue] = useState(String(service.price));
   const [discount, setDiscount] = useState(String(service.discountPercent));
-  const [oldPrice, setOldPrice] = useState(
+  const [oldPrice] = useState(
     service.oldPrice == null ? String(service.price) : String(service.oldPrice),
   );
-  const [minPrice, setMinPrice] = useState(
+  const [minPrice] = useState(
     service.minPrice == null ? "" : String(service.minPrice),
   );
-  const [maxPrice, setMaxPrice] = useState(
+  const [maxPrice] = useState(
     service.maxPrice == null ? "" : String(service.maxPrice),
   );
   const [options, setOptions] = useState(() =>
@@ -67,7 +71,7 @@ export function PriceDialog({
     setOptions((previous) => [
       ...previous,
       {
-        id: Math.max(0, ...previous.map((item) => item.id)) + 1,
+        id: Math.min(0, ...previous.map((item) => item.id)) - 1,
         name: "",
         price: "",
       },
@@ -131,18 +135,6 @@ export function PriceDialog({
             )}
           </label>
           <label>
-            Старая цена
-            <input
-              type="number"
-              min={0}
-              max={10000000}
-              step={1}
-              value={oldPrice}
-              onChange={(event) => setOldPrice(event.target.value)}
-              aria-invalid={submitted && isMoneyInvalid(details.oldPrice)}
-            />
-          </label>
-          <label>
             Скидка, %
             <input
               type="number"
@@ -157,30 +149,6 @@ export function PriceDialog({
               <span role="alert">Введите скидку от 0 до 100%.</span>
             )}
           </label>
-          <label>
-            Минимальная цена
-            <input
-              type="number"
-              min={0}
-              max={10000000}
-              step={1}
-              value={minPrice}
-              onChange={(event) => setMinPrice(event.target.value)}
-              aria-invalid={submitted && isMoneyInvalid(details.minPrice)}
-            />
-          </label>
-          <label>
-            Максимальная цена
-            <input
-              type="number"
-              min={0}
-              max={10000000}
-              step={1}
-              value={maxPrice}
-              onChange={(event) => setMaxPrice(event.target.value)}
-              aria-invalid={submitted && isMoneyInvalid(details.maxPrice)}
-            />
-          </label>
         </div>
         {submitted && invalidDetails && (
           <p role="alert" className={styles.optionError}>
@@ -194,13 +162,16 @@ export function PriceDialog({
           compact
         />
         <div className={styles.priceDialogActions}>
+          {error && <p role="alert">{error}</p>}
           <Button variant="secondary" onClick={addOption}>
             + Добавить параметр
           </Button>
           <Button variant="secondary" onClick={onClose}>
             Отмена
           </Button>
-          <Button type="submit">Сохранить цену</Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Сохраняем…" : "Сохранить цену"}
+          </Button>
         </div>
       </form>
     </AdminDialog>

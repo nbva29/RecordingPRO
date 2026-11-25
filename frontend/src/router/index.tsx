@@ -9,6 +9,7 @@ import { HomePage } from "../pages/home/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { OrganizationPage } from "../pages/organization/OrganizationPage";
 import { RegisterPage } from "../pages/RegisterPage";
+import { AdminRegisterPage } from "../pages/AdminRegisterPage";
 import { SearchPage } from "../pages/search/SearchPage";
 import { AdminCalendarPage } from "../pages/admin/AdminCalendarPage";
 import { AdminOverviewPage } from "../pages/admin/AdminOverviewPage";
@@ -30,38 +31,45 @@ export const routes: RouteObject[] = [
   },
   {
     element: <GuestOnly />,
-    children: [{
-      element: <AuthLayout />,
-      children: [
-        { path: "login", element: <LoginPage /> },
-        { path: "admin/login", element: <LoginPage audience="admin" /> },
-        { path: "register", element: <RegisterPage /> },
-      ],
-    }],
+    children: [
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: "login", element: <LoginPage /> },
+          { path: "admin/login", element: <LoginPage audience="admin" /> },
+          { path: "register", element: <RegisterPage /> },
+          { path: "admin/register", element: <AdminRegisterPage /> },
+        ],
+      },
+    ],
   },
   {
     element: <RequireAuth role="client" />,
-    children: [{
-      path: "client",
-      element: <ClientLayout />,
-      children: [
-        { index: true, element: <ClientOverviewPage /> },
-        { path: "bookings", element: <ClientBookingsPage /> },
-        { path: "profile", element: <ClientProfilePage /> },
-      ],
-    }],
+    children: [
+      {
+        path: "client",
+        element: <ClientLayout />,
+        children: [
+          { index: true, element: <ClientOverviewPage /> },
+          { path: "bookings", element: <ClientBookingsPage /> },
+          { path: "profile", element: <ClientProfilePage /> },
+        ],
+      },
+    ],
   },
   {
     element: <RequireAuth role="admin" />,
-    children: [{
-      path: "admin",
-      element: <AdminLayout />,
-      children: [
-        { index: true, element: <AdminOverviewPage /> },
-        { path: "calendar", element: <AdminCalendarPage /> },
-        { path: "services", element: <AdminServicesPage /> },
-        { path: "statistics", element: <AdminStatisticsPage /> },
-      ],
-    }],
+    children: [
+      {
+        path: "admin",
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <AdminOverviewPage /> },
+          { path: "calendar", element: <AdminCalendarPage /> },
+          { path: "services", element: <AdminServicesPage /> },
+          { path: "statistics", element: <AdminStatisticsPage /> },
+        ],
+      },
+    ],
   },
 ];

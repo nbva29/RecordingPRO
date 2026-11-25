@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_user
+from app.auth import get_current_user, require_organization_admin
 from app.database import get_db
 from app.models import (
     Appointment,
@@ -112,11 +112,11 @@ def lock_owned_appointment(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Запись не найдена"
         )
-    if reference.client_id != current_user.id and current_user.role.name != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Нет доступа к этой записи",
-        )
+    if reference.client_id != current_user.id:
+        specialist = db.get(Specialist, reference.specialist_id)
+        if specialist is None:
+            raise HTTPException(status_code=404, detail="Специалист не найден")
+        require_organization_admin(current_user, specialist.organization_id)
     specialist_id = reference.specialist_id
     # Specialist and client IDs never change when cancelling or rescheduling.
     # Reset the authentication snapshot, then lock in the same order as creation.

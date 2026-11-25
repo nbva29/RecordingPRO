@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_admin
+from app.auth import get_current_admin, require_organization_admin
 from app.database import get_db
 from app.models import Service, ServiceOption, User
 from app.schemas import (
@@ -90,6 +90,7 @@ def create_option(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> ServiceOptionRead:
     service = get_service(db, service_id)
+    require_organization_admin(_admin, service.category.organization_id)
     option = ServiceOption(
         service=service,
         name=data.name,
@@ -118,6 +119,7 @@ def update_option(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> ServiceOptionRead:
     option = get_option(db, option_id)
+    require_organization_admin(_admin, option.service.category.organization_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(option, field, value)
     db.commit()
@@ -141,6 +143,7 @@ def delete_option(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> None:
     option = get_option(db, option_id)
+    require_organization_admin(_admin, option.service.category.organization_id)
     db.delete(option)
     db.commit()
 

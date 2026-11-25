@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.auth import get_current_admin
+from app.auth import get_current_admin, require_organization_admin
 from app.database import get_db
 from app.models import Category, Service, Specialist, User
 from app.organizations import get_organization
@@ -121,6 +121,7 @@ def create_specialist(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> SpecialistRead:
     organization = get_organization(db, organization_id)
+    require_organization_admin(_admin, organization_id)
     services = resolve_services(db, organization.id, data.service_ids)
     specialist = Specialist(
         organization=organization,
@@ -151,6 +152,7 @@ def update_specialist(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> SpecialistRead:
     specialist = get_specialist(db, specialist_id)
+    require_organization_admin(_admin, specialist.organization_id)
     changes = data.model_dump(exclude_unset=True)
     service_ids = changes.pop("service_ids", None)
     if service_ids is not None:
@@ -182,6 +184,7 @@ def delete_specialist(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> None:
     specialist = get_specialist(db, specialist_id, for_update=True)
+    require_organization_admin(_admin, specialist.organization_id)
     db.delete(specialist)
     try:
         db.commit()

@@ -59,6 +59,11 @@ class User(Base):
     password_reset_attempts: Mapped[int] = mapped_column(default=0, server_default="0")
 
     role: Mapped[Role] = relationship()
+    managed_organization: Mapped["Organization | None"] = relationship(back_populates="owner", uselist=False)
+
+    @property
+    def organization_id(self) -> int | None:
+        return self.managed_organization.id if self.managed_organization else None
 
 
 class Organization(Base):
@@ -70,6 +75,8 @@ class Organization(Base):
     address: Mapped[str] = mapped_column(String(255))
     city: Mapped[str] = mapped_column(String(100))
     phone: Mapped[str | None] = mapped_column(String(32))
+    owner_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), unique=True)
+    owner: Mapped[User | None] = relationship(back_populates="managed_organization")
 
     categories: Mapped[list["Category"]] = relationship(
         back_populates="organization",

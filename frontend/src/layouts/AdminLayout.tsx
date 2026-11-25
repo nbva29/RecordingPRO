@@ -9,6 +9,7 @@ import { useAuthSession } from "../auth/authSession";
 import { Sidebar } from "../components/layout/Sidebar/Sidebar";
 import type { SidebarItem } from "../components/layout/Sidebar/Sidebar";
 import { AdminProvider } from "../pages/admin/AdminContext";
+import { CreateOrganizationPage } from "../pages/client/CreateOrganizationPage";
 import styles from "./Layout.module.css";
 
 const items: readonly SidebarItem[] = [
@@ -27,6 +28,7 @@ export function AdminLayout() {
   }
   const { pathname } = useLocation();
   const title = items.find((item) => item.to === pathname)?.label;
+  if (!user?.organization_id) return <CreateOrganizationPage />;
   return (
     <div id="admin-cabinet" className={styles.cabinetLayout}>
       <Sidebar

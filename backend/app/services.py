@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_admin
+from app.auth import get_current_admin, require_organization_admin
 from app.database import get_db
 from app.models import Category, Service, User
 from app.organizations import get_organization
@@ -103,6 +103,7 @@ def create_category(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> CategoryRead:
     organization = get_organization(db, organization_id)
+    require_organization_admin(_admin, organization_id)
     category = Category(organization=organization, name=data.name)
     db.add(category)
     try:
@@ -133,6 +134,7 @@ def update_category(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> CategoryRead:
     category = get_category(db, category_id)
+    require_organization_admin(_admin, category.organization_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(category, field, value)
 
@@ -163,6 +165,7 @@ def delete_category(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> None:
     category = get_category(db, category_id)
+    require_organization_admin(_admin, category.organization_id)
     service_exists = db.scalar(
         select(Service.id).where(Service.category_id == category.id).limit(1)
     )
@@ -233,6 +236,7 @@ def create_service(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> ServiceRead:
     organization = get_organization(db, organization_id)
+    require_organization_admin(_admin, organization_id)
     category = db.get(Category, data.category_id)
     if category is None or category.organization_id != organization.id:
         raise HTTPException(
@@ -272,7 +276,13 @@ def update_service(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> ServiceRead:
     service = get_service(db, service_id)
-    for field, value in data.model_dump(exclude_unset=True).items():
+    require_organization_admin(_admin, service.category.organization_id)
+    changes = data.model_dump(exclude_unset=True)
+    if "category_id" in changes:
+        category = db.get(Category, changes["category_id"])
+        if category is None or category.organization_id != service.category.organization_id:
+            raise HTTPException(status_code=404, detail="Категория не найдена в этой организации")
+    for field, value in changes.items():
         setattr(service, field, value)
 
     db.commit()
@@ -297,6 +307,7 @@ def delete_service(
     _admin: Annotated[User, Depends(get_current_admin)],
 ) -> None:
     service = get_service(db, service_id, for_update=True)
+    require_organization_admin(_admin, service.category.organization_id)
     db.delete(service)
     try:
         db.commit()
